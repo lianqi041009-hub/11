@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>价格资金池</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --bg: #050c1a; --bg2: #091428; --bg3: #0d1f3c;
+    --card: #0f2040; --card2: #132850; --border: #1e3a6a;
+    --gold: #f0b429; --gold2: #ffd166; --teal: #00d4aa;
+    --red: #ff4d6d; --blue: #4d9fff;
+    --text: #e8f0fe; --text2: #8ba3cc; --text3: #4a6a9e;
+    --green: #2ecc71;
+    --mono: 'Space Mono', monospace;
+    --sans: 'Noto Sans SC', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: var(--sans); background: var(--bg); color: var(--text);
+    min-height: 100vh; max-width: 480px; margin: 0 auto;
+    padding-bottom: 70px; overflow-x: hidden;
+  }
+  .header {
+    background: linear-gradient(135deg, #091428 0%, #0d1f3c 100%);
+    padding: 20px 18px 16px; border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .header-top { display: flex; justify-content: space-between; align-items: center; }
+  .header-title { font-family: var(--mono); font-size: 12px; color: var(--gold); letter-spacing: 3px; }
+  .header-badge {
+    background: rgba(240,180,41,0.15); border: 1px solid rgba(240,180,41,0.4);
+    color: var(--gold); font-size: 10px; font-family: var(--mono);
+    padding: 2px 8px; border-radius: 20px;
+  }
+  .header-sub { font-size: 19px; font-weight: 700; margin-top: 6px; }
+  .header-time { font-size: 10px; color: var(--text3); margin-top: 4px; font-family: var(--mono); }
+
+  .tabs {
+    background: var(--bg2); display: flex;
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 95px; z-index: 99;
+  }
+  .tab { flex: 1; padding: 12px 4px; text-align: center; font-size: 13px;
+    color: var(--text3); cursor: pointer; border-bottom: 2px solid transparent; }
+  .tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+  .tab-icon { font-size: 16px; display: block; margin-bottom: 2px; }
+
+  .panel { display: none; padding: 14px; }
+  .panel.active { display: block; }
+
+  /* Loading / error states */
+  .loading, .error {
+    text-align: center; padding: 60px 20px; color: var(--text2);
+  }
+  .loading-spinner {
+    width: 40px; height: 40px; border: 3px solid var(--border);
+    border-top-color: var(--gold); border-radius: 50%;
+    animation: spin 0.8s linear infinite; margin: 0 auto 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .error { color: var(--red); }
+  .error-detail { font-size: 12px; color: var(--text2); margin-top: 10px; line-height: 1.6; }
+  .error-help {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px; margin-top: 20px;
+    text-align: left; font-size: 12px; color: var(--text2); line-height: 1.7;
+  }
+  .error-help code {
+    background: var(--bg3); padding: 2px 6px; border-radius: 4px;
+    font-family: var(--mono); color: var(--gold); font-size: 11px;
+  }
+
+  .summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+  .sum-card { background: var(--card); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 8px; text-align: center; }
+  .sum-num { font-family: var(--mono); font-size: 17px; font-weight: 700; color: var(--gold); }
+  .sum-label { font-size: 10px; color: var(--text2); margin-top: 3px; }
+
+  .search-wrap { margin-bottom: 12px; position: relative; }
+  .search-input { width: 100%; background: var(--card); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 14px 10px 38px; color: var(--text);
+    font-size: 14px; font-family: var(--sans); outline: none; }
+  .search-input:focus { border-color: var(--gold); }
+  .search-input::placeholder { color: var(--text3); }
+  .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); }
+
+  .client-card { background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; margin-bottom: 10px; overflow: hidden; }
+  .client-card.expanded { border-color: rgba(240,180,41,0.4); }
+  .client-header { display: flex; align-items: center; padding: 12px 14px; cursor: pointer; gap: 10px; }
+  .client-avatar { width: 38px; height: 38px; border-radius: 10px;
+    background: linear-gradient(135deg, #1a3a6e, #0d2450); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 11px; color: var(--gold); font-weight: 700; flex-shrink: 0; }
+  .client-info { flex: 1; min-width: 0; }
+  .client-name { font-weight: 700; font-size: 15px; }
+  .client-meta { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  .client-right { text-align: right; flex-shrink: 0; }
+  .price-today { font-family: var(--mono); font-size: 16px; font-weight: 700; color: var(--gold); }
+  .status-badge { font-size: 10px; padding: 2px 6px; border-radius: 6px; margin-top: 3px; display: inline-block; }
+  .status-badge.equal { background: rgba(46,204,113,0.15); color: var(--green); border: 1px solid rgba(46,204,113,0.3); }
+  .status-badge.not-equal { background: rgba(255,77,109,0.15); color: var(--red); border: 1px solid rgba(255,77,109,0.3); }
+  .status-badge.not-found { background: rgba(255,209,102,0.15); color: var(--gold2); border: 1px solid rgba(255,209,102,0.3); }
+  .expand-arrow { color: var(--text3); font-size: 12px; transition: transform 0.2s; }
+  .expanded .expand-arrow { transform: rotate(180deg); }
+
+  .client-detail { display: none; border-top: 1px solid var(--border); padding: 12px 14px; }
+  .expanded .client-detail { display: block; }
+  .detail-section { margin-bottom: 12px; }
+  .detail-label { font-size: 10px; color: var(--text3); letter-spacing: 1.5px; margin-bottom: 8px; font-family: var(--mono); }
+  .price-tiers { display: flex; gap: 4px; flex-wrap: wrap; }
+  .price-tier { background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 8px; padding: 6px 10px; text-align: center; }
+  .price-tier.current { border-color: rgba(240,180,41,0.5); background: rgba(240,180,41,0.08); }
+  .tier-price { font-family: var(--mono); font-size: 13px; font-weight: 700; }
+  .tier-price.current { color: var(--gold); }
+  .tier-pool { font-size: 10px; color: var(--text2); margin-top: 2px; }
+  .tier-pool.positive { color: var(--teal); }
+  .tier-pool.negative { color: var(--red); }
+  .tier-pool.zero { color: var(--text3); }
+  .kw-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .kw-badge { background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 8px; padding: 5px 12px; font-family: var(--mono); font-size: 13px; color: var(--blue); }
+  .kw-badge span { color: var(--text2); font-size: 10px; margin-right: 4px; }
+
+  .hist-table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border); }
+  .hist-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 500px; }
+  .hist-table th { background: var(--card2); color: var(--text2); padding: 8px 10px;
+    text-align: center; font-weight: 500; font-size: 10px;
+    border-bottom: 1px solid var(--border); white-space: nowrap; }
+  .hist-table th:first-child { text-align: left; }
+  .hist-table td { padding: 7px 10px; text-align: center; border-bottom: 1px solid rgba(30,58,106,0.4);
+    font-family: var(--mono); color: var(--text2); }
+  .hist-table td:first-child { text-align: left; font-family: var(--sans); font-weight: 700; color: var(--text); }
+  .hist-table td.current-price { color: var(--gold); font-weight: 700; }
+  .hist-table td.empty { color: var(--text3); }
+
+  .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 480px; background: var(--bg2);
+    border-top: 1px solid var(--border); display: flex; padding: 8px 0 12px; z-index: 200; }
+  .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; }
+  .nav-icon { font-size: 20px; }
+  .nav-label { font-size: 10px; color: var(--text3); }
+  .nav-item.active .nav-label { color: var(--gold); }
+
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div class="header-title">PRICE · POOL</div>
+    <div class="header-badge" id="dataBadge">加载中…</div>
+  </div>
+  <div class="header-sub">价格资金池管理</div>
+  <div class="header-time" id="updateTime"></div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab(0)"><span class="tab-icon">💰</span>今日价格</div>
+  <div class="tab" onclick="switchTab(1)"><span class="tab-icon">📈</span>价格历史</div>
+</div>
+
+<div class="panel active" id="panel0">
+  <div id="todayContent">
+    <div class="loading">
+      <div class="loading-spinner"></div>
+      <div>正在读取 Excel 数据…</div>
+    </div>
+  </div>
+</div>
+
+<div class="panel" id="panel1">
+  <div id="historyContent">
+    <div class="loading"><div class="loading-spinner"></div></div>
+  </div>
+</div>
+
+<div class="bottom-nav">
+  <div class="nav-item active" onclick="switchTab(0)"><span class="nav-icon">💰</span><span class="nav-label">今日价格</span></div>
+  <div class="nav-item" onclick="switchTab(1)"><span class="nav-icon">📈</span><span class="nav-label">价格历史</span></div>
+</div>
+
+<script>
+// ============ 配置 ============
+// 网站会自动读取同目录下的这个文件
+const EXCEL_FILE = '11.xlsx';
+
+let allClients = [];
+let histDates = [];
+let histRows = [];
+
+// ============ 加载 Excel ============
+async function loadExcel() {
+  try {
+    const res = await fetch(EXCEL_FILE + '?t=' + Date.now()); // 加时间戳防缓存
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const buf = await res.arrayBuffer();
+    const wb = XLSX.read(buf, { type: 'array' });
+
+    // === 解析 Sheet1: 今日价格 ===
+    const sheet1Name = wb.SheetNames[0];
+    const sheet1 = XLSX.utils.sheet_to_json(wb.Sheets[sheet1Name], { header: 1, defval: null });
+
+    allClients = parseSheet1(sheet1);
+
+    // === 解析 Sheet2: 价格历史 ===
+    const sheet2Name = wb.SheetNames.find(n => /sheet2/i.test(n)) || wb.SheetNames[2];
+    if (sheet2Name) {
+      const sheet2 = XLSX.utils.sheet_to_json(wb.Sheets[sheet2Name], { header: 1, defval: null });
+      parseSheet2(sheet2);
+    }
+
+    // 更新时间显示
+    const now = new Date();
+    document.getElementById('dataBadge').textContent = '✓ 已加载';
+    document.getElementById('updateTime').textContent =
+      '数据更新于 ' + now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' +
+      String(now.getDate()).padStart(2,'0') + ' ' + String(now.getHours()).padStart(2,'0') + ':' +
+      String(now.getMinutes()).padStart(2,'0');
+
+    renderToday();
+    renderHistory();
+  } catch (err) {
+    showError(err.message);
+  }
+}
+
+function parseSheet1(rows) {
+  if (!rows || rows.length < 2) return [];
+  const header = rows[0].map(h => h ? String(h).trim() : '');
+  const out = [];
+
+  for (let i = 1; i < rows.length; i++) {
+    const r = rows[i];
+    if (!r || !r[0]) continue;
+
+    const c = {
+      name: String(r[0]).trim(),
+      price: toNum(r[1]),
+      status: r[2] ? String(r[2]).trim() : '',
+      kw2: toNum(r[3]),
+      kw3: toNum(r[4]),
+      tiers: []
+    };
+
+    // 从第 6 列开始，每 3 列一组（日期, 价格, 资金池）
+    // 列索引: 5(日期1空), 6(价格1), 7(资金池1), 8(日期2空), 9(价格2), 10(资金池2)...
+    for (let col = 5; col < r.length; col += 3) {
+      const price = toNum(r[col + 1]);
+      const pool = toNum(r[col + 2]);
+      if (price !== null && price !== undefined) {
+        c.tiers.push({ p: price, pool: pool || 0 });
+      }
+    }
+    out.push(c);
+  }
+  return out;
+}
+
+function parseSheet2(rows) {
+  if (!rows || rows.length < 2) return;
+  // 第一行是日期表头，从第 3 列开始（前两列通常是备注/客户名）
+  const headerRow = rows[0] || [];
+  histDates = [];
+  for (let i = 2; i < headerRow.length; i++) {
+    if (headerRow[i] !== null && headerRow[i] !== undefined && headerRow[i] !== '') {
+      histDates.push(String(headerRow[i]).trim());
+    }
+  }
+
+  histRows = [];
+  for (let i = 1; i < rows.length; i++) {
+    const r = rows[i];
+    if (!r) continue;
+    // 客户名通常在第 2 列
+    const name = r[1] ? String(r[1]).trim() : '';
+    if (!name) continue;
+    const values = [];
+    for (let j = 2; j < 2 + histDates.length; j++) {
+      values.push(toNum(r[j]));
+    }
+    histRows.push({ n: name, v: values });
+  }
+}
+
+function toNum(v) {
+  if (v === null || v === undefined || v === '') return null;
+  if (typeof v === 'number') return v;
+  const s = String(v).trim();
+  if (s === '' || s === '未找到' || s === '相等' || s === '不相等') return null;
+  const n = parseFloat(s.replace(/,/g, ''));
+  return isNaN(n) ? null : n;
+}
+
+// ============ 渲染：今日价格 ============
+function renderToday() {
+  const equal = allClients.filter(c => c.status === '相等').length;
+  const diff = allClients.filter(c => c.status && c.status !== '相等').length;
+
+  document.getElementById('todayContent').innerHTML = `
+    <div class="summary">
+      <div class="sum-card"><div class="sum-num">${allClients.length}</div><div class="sum-label">客户总数</div></div>
+      <div class="sum-card"><div class="sum-num" style="color:var(--green)">${equal}</div><div class="sum-label">账目相等</div></div>
+      <div class="sum-card"><div class="sum-num" style="color:var(--red)">${diff}</div><div class="sum-label">待核查</div></div>
+    </div>
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" type="text" placeholder="搜索客户名称…" id="searchInput" oninput="filterClients()">
+    </div>
+    <div id="clientList"></div>
+  `;
+  renderClientList(allClients);
+}
+
+function renderClientList(arr) {
+  const list = document.getElementById('clientList');
+  if (!list) return;
+  list.innerHTML = arr.map((c, i) => {
+    const statusClass = c.status === '相等' ? 'equal' : (c.status === '不相等' ? 'not-equal' : 'not-found');
+    const statusText = c.status === '相等' ? '✓ 账目相等' : (c.status === '不相等' ? '✗ 不相等' : (c.status || '—'));
+    const priceDisplay = c.price ? (c.price/1000).toFixed(0) + 'k' : '—';
+    const lastPool = [...c.tiers].reverse().find(t => t.pool !== 0);
+    const summary = lastPool ? `资金池: ${fmtPool(lastPool.pool)}` : `${c.tiers.length} 个价格档`;
+
+    const tiersHtml = c.tiers.map((t, ti) => {
+      const isCurrent = ti === c.tiers.length - 1;
+      const poolCls = t.pool === 0 ? 'zero' : (t.pool > 0 ? 'positive' : 'negative');
+      return `<div class="price-tier ${isCurrent?'current':''}">
+        <div class="tier-price ${isCurrent?'current':''}">${t.p ? (t.p/1000).toFixed(0)+'k' : '—'}</div>
+        <div class="tier-pool ${poolCls}">${fmtPool(t.pool)}</div>
+      </div>`;
+    }).join('');
+
+    const kwHtml = (c.kw2 || c.kw3) ? `
+      <div class="detail-section">
+        <div class="detail-label">保证金 KW</div>
+        <div class="kw-row">
+          ${c.kw2 ? `<div class="kw-badge"><span>KW2</span>${(c.kw2/1000).toFixed(0)}k</div>` : ''}
+          ${c.kw3 ? `<div class="kw-badge"><span>KW3</span>${(c.kw3/1000).toFixed(0)}k</div>` : ''}
+        </div>
+      </div>` : '';
+
+    return `<div class="client-card" id="card-${i}">
+      <div class="client-header" onclick="toggleCard(${i})">
+        <div class="client-avatar">${c.name.substring(0,3)}</div>
+        <div class="client-info">
+          <div class="client-name">${c.name}</div>
+          <div class="client-meta">${summary}</div>
+        </div>
+        <div class="client-right">
+          <div class="price-today">${priceDisplay}</div>
+          <div class="status-badge ${statusClass}">${statusText}</div>
+        </div>
+        <span class="expand-arrow">▼</span>
+      </div>
+      <div class="client-detail">
+        ${kwHtml}
+        ${c.tiers.length > 0 ? `<div class="detail-section">
+          <div class="detail-label">价格档 · 资金池</div>
+          <div class="price-tiers">${tiersHtml}</div>
+        </div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function fmtPool(v) {
+  if (v === 0 || v === null || v === undefined) return '—';
+  const abs = Math.abs(v);
+  const sign = v < 0 ? '-' : '+';
+  if (abs >= 1e8) return sign + (abs/1e8).toFixed(2) + '亿';
+  if (abs >= 1e4) return sign + (abs/1e4).toFixed(1) + '万';
+  return sign + v.toLocaleString();
+}
+
+function toggleCard(i) { document.getElementById('card-' + i).classList.toggle('expanded'); }
+
+function filterClients() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  renderClientList(allClients.filter(c => c.name.toLowerCase().includes(q)));
+}
+
+// ============ 渲染：价格历史 ============
+function renderHistory() {
+  const head = `<tr><th>客户</th>${histDates.map(d => `<th>${d}</th>`).join('')}</tr>`;
+  const body = histRows.map(row => {
+    const cells = row.v.map((v, i) => {
+      const isLast = i === histDates.length - 1;
+      return `<td class="${v===null||v===undefined?'empty':''}${isLast?' current-price':''}">${v===null||v===undefined?'—':v}</td>`;
+    }).join('');
+    return `<tr><td>${row.n}</td>${cells}</tr>`;
+  }).join('');
+
+  document.getElementById('historyContent').innerHTML = `
+    <div class="hist-table-wrap">
+      <table class="hist-table">
+        <thead>${head}</thead>
+        <tbody>${body}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+// ============ 错误显示 ============
+function showError(msg) {
+  document.getElementById('dataBadge').textContent = '✗ 加载失败';
+  document.getElementById('todayContent').innerHTML = `
+    <div class="error">
+      <div style="font-size:32px;margin-bottom:10px">⚠️</div>
+      <div>无法读取 Excel 文件</div>
+      <div class="error-detail">${msg}</div>
+      <div class="error-help">
+        <b style="color:var(--gold)">请确认：</b><br>
+        1. 文件 <code>11.xlsx</code> 与本网页放在同一目录<br>
+        2. 文件名大小写完全一致<br>
+        3. 如果是 GitHub Pages，上传后等 1-2 分钟<br>
+        4. 浏览器按 Ctrl+F5 强制刷新
+      </div>
+    </div>
+  `;
+}
+
+// ============ 标签切换 ============
+function switchTab(i) {
+  document.querySelectorAll('.panel').forEach((p,j) => p.classList.toggle('active', j === i));
+  document.querySelectorAll('.tab').forEach((t,j) => t.classList.toggle('active', j === i));
+  document.querySelectorAll('.nav-item').forEach((n,j) => n.classList.toggle('active', j === i));
+}
+
+// ============ 启动 ============
+loadExcel();
+</script>
+</body>
+</html>
