@@ -8,63 +8,164 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root {
-    --bg: #050c1a; --bg2: #091428; --bg3: #0d1f3c;
-    --card: #0f2040; --card2: #132850; --border: #1e3a6a;
-    --gold: #f0b429; --gold2: #ffd166; --teal: #00d4aa;
-    --red: #ff4d6d; --blue: #4d9fff;
-    --text: #e8f0fe; --text2: #8ba3cc; --text3: #4a6a9e;
-    --green: #2ecc71;
+    --bg: #f5f7fb;
+    --bg2: #ffffff;
+    --bg3: #eef1f8;
+    --card: #ffffff;
+    --card2: #f0f3fa;
+    --border: #dde3ef;
+    --border2: #c8d2e8;
+    --gold: #e07b00;
+    --gold2: #f5a623;
+    --teal: #0099a8;
+    --red: #d93025;
+    --blue: #1a6fd4;
+    --text: #1a2236;
+    --text2: #5a6a85;
+    --text3: #9aa5ba;
+    --green: #1a8a4a;
+    --shadow: 0 2px 12px rgba(60,80,130,0.08);
+    --shadow2: 0 4px 20px rgba(60,80,130,0.13);
     --mono: 'Space Mono', monospace;
     --sans: 'Noto Sans SC', sans-serif;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
   body {
     font-family: var(--sans); background: var(--bg); color: var(--text);
     min-height: 100vh; max-width: 480px; margin: 0 auto;
     padding-bottom: 70px; overflow-x: hidden;
   }
+
+  /* ===== LOGIN SCREEN ===== */
+  #loginScreen {
+    position: fixed; inset: 0; background: linear-gradient(150deg, #e8edf8 0%, #f5f7fb 50%, #dfe6f5 100%);
+    z-index: 999; display: flex; align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  .login-box {
+    background: #fff; border-radius: 20px; padding: 40px 32px 36px;
+    box-shadow: 0 8px 40px rgba(60,80,130,0.18); width: 100%; max-width: 360px;
+    animation: fadeInUp 0.4s ease;
+  }
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .login-logo {
+    text-align: center; margin-bottom: 28px;
+  }
+  .login-logo-icon {
+    width: 60px; height: 60px; background: linear-gradient(135deg, #1a6fd4, #0099a8);
+    border-radius: 16px; display: flex; align-items: center; justify-content: center;
+    font-size: 28px; margin: 0 auto 14px; box-shadow: 0 4px 16px rgba(26,111,212,0.3);
+  }
+  .login-logo h1 {
+    font-size: 20px; font-weight: 700; color: var(--text); letter-spacing: 0.5px;
+  }
+  .login-logo p {
+    font-size: 12px; color: var(--text3); margin-top: 4px;
+  }
+  .login-field { margin-bottom: 16px; }
+  .login-field label {
+    display: block; font-size: 12px; font-weight: 600; color: var(--text2);
+    margin-bottom: 6px; letter-spacing: 0.5px;
+  }
+  .login-field input {
+    width: 100%; padding: 12px 16px;
+    border: 1.5px solid var(--border); border-radius: 10px;
+    font-size: 15px; font-family: var(--sans); color: var(--text);
+    background: var(--bg3); outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .login-field input:focus {
+    border-color: var(--blue); background: #fff;
+    box-shadow: 0 0 0 3px rgba(26,111,212,0.1);
+  }
+  .login-btn {
+    width: 100%; padding: 13px; margin-top: 8px;
+    background: linear-gradient(135deg, #1a6fd4, #1058b0);
+    color: #fff; border: none; border-radius: 10px;
+    font-size: 15px; font-weight: 600; font-family: var(--sans);
+    cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;
+    box-shadow: 0 4px 14px rgba(26,111,212,0.35);
+  }
+  .login-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(26,111,212,0.4); }
+  .login-btn:active { transform: translateY(0); }
+  .login-error {
+    background: #fff0f0; border: 1px solid #f5c6c6; color: var(--red);
+    border-radius: 8px; padding: 10px 14px; font-size: 13px;
+    text-align: center; margin-top: 12px; display: none;
+  }
+
+  /* ===== MAIN APP ===== */
+  #appScreen { display: none; }
+  #appScreen.visible { display: block; }
+
   .header {
-    background: linear-gradient(135deg, #091428 0%, #0d1f3c 100%);
-    padding: 20px 18px 16px; border-bottom: 1px solid var(--border);
+    background: #fff;
+    padding: 18px 18px 14px;
+    border-bottom: 1px solid var(--border);
     position: sticky; top: 0; z-index: 100;
+    box-shadow: var(--shadow);
   }
   .header-top { display: flex; justify-content: space-between; align-items: center; }
-  .header-title { font-family: var(--mono); font-size: 12px; color: var(--gold); letter-spacing: 3px; }
-  .header-badge {
-    background: rgba(240,180,41,0.15); border: 1px solid rgba(240,180,41,0.4);
-    color: var(--gold); font-size: 10px; font-family: var(--mono);
-    padding: 2px 8px; border-radius: 20px;
+  .header-title {
+    font-family: var(--mono); font-size: 11px; color: var(--blue);
+    letter-spacing: 3px; font-weight: 700;
   }
-  .header-sub { font-size: 19px; font-weight: 700; margin-top: 6px; }
-  .header-time { font-size: 10px; color: var(--text3); margin-top: 4px; font-family: var(--mono); }
+  .header-badge {
+    background: rgba(26,111,212,0.1); border: 1px solid rgba(26,111,212,0.25);
+    color: var(--blue); font-size: 10px; font-family: var(--mono);
+    padding: 3px 10px; border-radius: 20px; font-weight: 700;
+  }
+  .header-badge.loaded {
+    background: rgba(26,138,74,0.1); border-color: rgba(26,138,74,0.25);
+    color: var(--green);
+  }
+  .header-badge.error {
+    background: rgba(217,48,37,0.08); border-color: rgba(217,48,37,0.25);
+    color: var(--red);
+  }
+  .header-sub { font-size: 18px; font-weight: 700; margin-top: 6px; color: var(--text); }
+  .header-time { font-size: 10px; color: var(--text3); margin-top: 3px; font-family: var(--mono); }
+  .header-actions { display: flex; align-items: center; gap: 10px; }
+  .logout-btn {
+    background: none; border: 1px solid var(--border2); border-radius: 8px;
+    color: var(--text2); font-size: 11px; padding: 4px 10px; cursor: pointer;
+    font-family: var(--sans); transition: all 0.15s;
+  }
+  .logout-btn:hover { border-color: var(--red); color: var(--red); background: rgba(217,48,37,0.05); }
 
   .tabs {
-    background: var(--bg2); display: flex;
-    border-bottom: 1px solid var(--border);
-    position: sticky; top: 95px; z-index: 99;
+    background: #fff; display: flex;
+    border-bottom: 2px solid var(--border);
+    position: sticky; top: 93px; z-index: 99;
+    box-shadow: 0 2px 8px rgba(60,80,130,0.05);
   }
-  .tab { flex: 1; padding: 12px 4px; text-align: center; font-size: 13px;
-    color: var(--text3); cursor: pointer; border-bottom: 2px solid transparent; }
-  .tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+  .tab {
+    flex: 1; padding: 11px 4px; text-align: center; font-size: 13px;
+    color: var(--text3); cursor: pointer;
+    border-bottom: 2px solid transparent; margin-bottom: -2px;
+    transition: color 0.2s;
+  }
+  .tab.active { color: var(--blue); border-bottom-color: var(--blue); font-weight: 600; }
   .tab-icon { font-size: 16px; display: block; margin-bottom: 2px; }
 
   .panel { display: none; padding: 14px; }
   .panel.active { display: block; }
 
   /* Loading / error states */
-  .loading, .error {
-    text-align: center; padding: 60px 20px; color: var(--text2);
-  }
+  .loading, .error { text-align: center; padding: 60px 20px; color: var(--text2); }
   .loading-spinner {
-    width: 40px; height: 40px; border: 3px solid var(--border);
-    border-top-color: var(--gold); border-radius: 50%;
+    width: 38px; height: 38px; border: 3px solid var(--border);
+    border-top-color: var(--blue); border-radius: 50%;
     animation: spin 0.8s linear infinite; margin: 0 auto 16px;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
   .error { color: var(--red); }
   .error-detail { font-size: 12px; color: var(--text2); margin-top: 10px; line-height: 1.6; }
   .error-help {
-    background: var(--card); border: 1px solid var(--border);
+    background: #fff8f0; border: 1px solid #f5dfc6;
     border-radius: 10px; padding: 14px; margin-top: 20px;
     text-align: left; font-size: 12px; color: var(--text2); line-height: 1.7;
   }
@@ -73,122 +174,224 @@
     font-family: var(--mono); color: var(--gold); font-size: 11px;
   }
 
-  .summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
-  .sum-card { background: var(--card); border: 1px solid var(--border);
-    border-radius: 10px; padding: 10px 8px; text-align: center; }
-  .sum-num { font-family: var(--mono); font-size: 17px; font-weight: 700; color: var(--gold); }
-  .sum-label { font-size: 10px; color: var(--text2); margin-top: 3px; }
+  /* Summary cards */
+  .summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+  .sum-card {
+    background: #fff; border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 8px; text-align: center;
+    box-shadow: var(--shadow);
+  }
+  .sum-num { font-family: var(--mono); font-size: 18px; font-weight: 700; color: var(--blue); }
+  .sum-num.green { color: var(--green); }
+  .sum-num.red { color: var(--red); }
+  .sum-label { font-size: 10px; color: var(--text2); margin-top: 4px; font-weight: 500; }
 
+  /* Search */
   .search-wrap { margin-bottom: 12px; position: relative; }
-  .search-input { width: 100%; background: var(--card); border: 1px solid var(--border);
-    border-radius: 10px; padding: 10px 14px 10px 38px; color: var(--text);
-    font-size: 14px; font-family: var(--sans); outline: none; }
-  .search-input:focus { border-color: var(--gold); }
+  .search-input {
+    width: 100%; background: #fff; border: 1.5px solid var(--border);
+    border-radius: 10px; padding: 10px 14px 10px 40px; color: var(--text);
+    font-size: 14px; font-family: var(--sans); outline: none;
+    box-shadow: var(--shadow); transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .search-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(26,111,212,0.1); }
   .search-input::placeholder { color: var(--text3); }
-  .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); }
+  .search-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); font-size: 15px; }
 
-  .client-card { background: var(--card); border: 1px solid var(--border);
-    border-radius: 12px; margin-bottom: 10px; overflow: hidden; }
-  .client-card.expanded { border-color: rgba(240,180,41,0.4); }
-  .client-header { display: flex; align-items: center; padding: 12px 14px; cursor: pointer; gap: 10px; }
-  .client-avatar { width: 38px; height: 38px; border-radius: 10px;
-    background: linear-gradient(135deg, #1a3a6e, #0d2450); border: 1px solid var(--border);
+  /* Client cards */
+  .client-card {
+    background: #fff; border: 1.5px solid var(--border);
+    border-radius: 14px; margin-bottom: 10px; overflow: hidden;
+    box-shadow: var(--shadow); transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .client-card:hover { box-shadow: var(--shadow2); }
+  .client-card.expanded { border-color: rgba(26,111,212,0.4); box-shadow: 0 4px 20px rgba(26,111,212,0.12); }
+  .client-header { display: flex; align-items: center; padding: 13px 14px; cursor: pointer; gap: 11px; }
+  .client-avatar {
+    width: 40px; height: 40px; border-radius: 11px;
+    background: linear-gradient(135deg, #dde8f8, #c8daf5); border: 1.5px solid #b8cef0;
     display: flex; align-items: center; justify-content: center;
-    font-family: var(--mono); font-size: 11px; color: var(--gold); font-weight: 700; flex-shrink: 0; }
+    font-family: var(--mono); font-size: 10px; color: var(--blue); font-weight: 700; flex-shrink: 0;
+  }
   .client-info { flex: 1; min-width: 0; }
-  .client-name { font-weight: 700; font-size: 15px; }
+  .client-name { font-weight: 700; font-size: 15px; color: var(--text); }
   .client-meta { font-size: 11px; color: var(--text2); margin-top: 2px; }
   .client-right { text-align: right; flex-shrink: 0; }
-  .price-today { font-family: var(--mono); font-size: 16px; font-weight: 700; color: var(--gold); }
-  .status-badge { font-size: 10px; padding: 2px 6px; border-radius: 6px; margin-top: 3px; display: inline-block; }
-  .status-badge.equal { background: rgba(46,204,113,0.15); color: var(--green); border: 1px solid rgba(46,204,113,0.3); }
-  .status-badge.not-equal { background: rgba(255,77,109,0.15); color: var(--red); border: 1px solid rgba(255,77,109,0.3); }
-  .status-badge.not-found { background: rgba(255,209,102,0.15); color: var(--gold2); border: 1px solid rgba(255,209,102,0.3); }
+  .price-today { font-family: var(--mono); font-size: 16px; font-weight: 700; color: var(--blue); }
+  .status-badge { font-size: 10px; padding: 2px 7px; border-radius: 6px; margin-top: 3px; display: inline-block; font-weight: 600; }
+  .status-badge.equal { background: rgba(26,138,74,0.1); color: var(--green); border: 1px solid rgba(26,138,74,0.25); }
+  .status-badge.not-equal { background: rgba(217,48,37,0.09); color: var(--red); border: 1px solid rgba(217,48,37,0.22); }
+  .status-badge.not-found { background: rgba(224,123,0,0.1); color: var(--gold); border: 1px solid rgba(224,123,0,0.25); }
   .expand-arrow { color: var(--text3); font-size: 12px; transition: transform 0.2s; }
-  .expanded .expand-arrow { transform: rotate(180deg); }
+  .expanded .expand-arrow { transform: rotate(180deg); color: var(--blue); }
 
-  .client-detail { display: none; border-top: 1px solid var(--border); padding: 12px 14px; }
+  .client-detail { display: none; border-top: 1px solid var(--border); padding: 14px; background: var(--bg3); }
   .expanded .client-detail { display: block; }
   .detail-section { margin-bottom: 12px; }
-  .detail-label { font-size: 10px; color: var(--text3); letter-spacing: 1.5px; margin-bottom: 8px; font-family: var(--mono); }
-  .price-tiers { display: flex; gap: 4px; flex-wrap: wrap; }
-  .price-tier { background: var(--bg3); border: 1px solid var(--border);
-    border-radius: 8px; padding: 6px 10px; text-align: center; }
-  .price-tier.current { border-color: rgba(240,180,41,0.5); background: rgba(240,180,41,0.08); }
-  .tier-price { font-family: var(--mono); font-size: 13px; font-weight: 700; }
-  .tier-price.current { color: var(--gold); }
+  .detail-label {
+    font-size: 10px; color: var(--text3); letter-spacing: 1.5px;
+    margin-bottom: 8px; font-family: var(--mono); font-weight: 700;
+  }
+  .price-tiers { display: flex; gap: 6px; flex-wrap: wrap; }
+  .price-tier {
+    background: #fff; border: 1.5px solid var(--border);
+    border-radius: 10px; padding: 7px 12px; text-align: center;
+    box-shadow: 0 1px 4px rgba(60,80,130,0.07);
+  }
+  .price-tier.current { border-color: rgba(26,111,212,0.4); background: rgba(26,111,212,0.04); }
+  .tier-price { font-family: var(--mono); font-size: 13px; font-weight: 700; color: var(--text2); }
+  .tier-price.current { color: var(--blue); }
   .tier-pool { font-size: 10px; color: var(--text2); margin-top: 2px; }
-  .tier-pool.positive { color: var(--teal); }
-  .tier-pool.negative { color: var(--red); }
+  .tier-pool.positive { color: var(--teal); font-weight: 600; }
+  .tier-pool.negative { color: var(--red); font-weight: 600; }
   .tier-pool.zero { color: var(--text3); }
   .kw-row { display: flex; gap: 8px; flex-wrap: wrap; }
-  .kw-badge { background: var(--bg3); border: 1px solid var(--border);
-    border-radius: 8px; padding: 5px 12px; font-family: var(--mono); font-size: 13px; color: var(--blue); }
-  .kw-badge span { color: var(--text2); font-size: 10px; margin-right: 4px; }
+  .kw-badge {
+    background: #fff; border: 1.5px solid var(--border);
+    border-radius: 8px; padding: 5px 12px;
+    font-family: var(--mono); font-size: 13px; color: var(--blue);
+    box-shadow: 0 1px 4px rgba(60,80,130,0.07);
+  }
+  .kw-badge span { color: var(--text3); font-size: 10px; margin-right: 4px; }
 
-  .hist-table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border); }
-  .hist-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 500px; }
-  .hist-table th { background: var(--card2); color: var(--text2); padding: 8px 10px;
-    text-align: center; font-weight: 500; font-size: 10px;
-    border-bottom: 1px solid var(--border); white-space: nowrap; }
+  /* History table */
+  .hist-table-wrap {
+    overflow-x: auto; border-radius: 12px;
+    border: 1.5px solid var(--border); box-shadow: var(--shadow);
+  }
+  .hist-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 500px; background: #fff; }
+  .hist-table th {
+    background: var(--bg3); color: var(--text2); padding: 10px 12px;
+    text-align: center; font-weight: 600; font-size: 11px;
+    border-bottom: 1.5px solid var(--border); white-space: nowrap;
+  }
   .hist-table th:first-child { text-align: left; }
-  .hist-table td { padding: 7px 10px; text-align: center; border-bottom: 1px solid rgba(30,58,106,0.4);
-    font-family: var(--mono); color: var(--text2); }
+  .hist-table tr:hover td { background: #f7f9fd; }
+  .hist-table td {
+    padding: 8px 12px; text-align: center;
+    border-bottom: 1px solid rgba(200,210,232,0.5);
+    font-family: var(--mono); color: var(--text2);
+  }
   .hist-table td:first-child { text-align: left; font-family: var(--sans); font-weight: 700; color: var(--text); }
-  .hist-table td.current-price { color: var(--gold); font-weight: 700; }
+  .hist-table td.current-price { color: var(--blue); font-weight: 700; }
   .hist-table td.empty { color: var(--text3); }
 
-  .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
-    width: 100%; max-width: 480px; background: var(--bg2);
-    border-top: 1px solid var(--border); display: flex; padding: 8px 0 12px; z-index: 200; }
+  /* Bottom nav */
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 480px; background: #fff;
+    border-top: 1.5px solid var(--border); display: flex; padding: 8px 0 14px; z-index: 200;
+    box-shadow: 0 -4px 16px rgba(60,80,130,0.08);
+  }
   .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; }
   .nav-icon { font-size: 20px; }
-  .nav-label { font-size: 10px; color: var(--text3); }
-  .nav-item.active .nav-label { color: var(--gold); }
+  .nav-label { font-size: 10px; color: var(--text3); font-weight: 500; transition: color 0.2s; }
+  .nav-item.active .nav-label { color: var(--blue); font-weight: 700; }
 
   ::-webkit-scrollbar { width: 4px; height: 4px; }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+  ::-webkit-scrollbar-track { background: transparent; }
 </style>
 </head>
 <body>
 
-<div class="header">
-  <div class="header-top">
-    <div class="header-title">PRICE · POOL</div>
-    <div class="header-badge" id="dataBadge">加载中…</div>
+<!-- ===== LOGIN SCREEN ===== -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-logo-icon">💰</div>
+      <h1>价格资金池</h1>
+      <p>请输入账号和密码以继续</p>
+    </div>
+    <div class="login-field">
+      <label>账号</label>
+      <input type="text" id="loginUser" placeholder="请输入账号" autocomplete="username" />
+    </div>
+    <div class="login-field">
+      <label>密码</label>
+      <input type="password" id="loginPass" placeholder="请输入密码" autocomplete="current-password" />
+    </div>
+    <button class="login-btn" onclick="doLogin()">登 录</button>
+    <div class="login-error" id="loginError">账号或密码不正确，请重试</div>
   </div>
-  <div class="header-sub">价格资金池管理</div>
-  <div class="header-time" id="updateTime"></div>
 </div>
 
-<div class="tabs">
-  <div class="tab active" onclick="switchTab(0)"><span class="tab-icon">💰</span>今日价格</div>
-  <div class="tab" onclick="switchTab(1)"><span class="tab-icon">📈</span>价格历史</div>
-</div>
+<!-- ===== MAIN APP ===== -->
+<div id="appScreen">
+  <div class="header">
+    <div class="header-top">
+      <div class="header-title">PRICE · POOL</div>
+      <div class="header-actions">
+        <div class="header-badge" id="dataBadge">加载中…</div>
+        <button class="logout-btn" onclick="doLogout()">退出</button>
+      </div>
+    </div>
+    <div class="header-sub">价格资金池管理</div>
+    <div class="header-time" id="updateTime"></div>
+  </div>
 
-<div class="panel active" id="panel0">
-  <div id="todayContent">
-    <div class="loading">
-      <div class="loading-spinner"></div>
-      <div>正在读取 Excel 数据…</div>
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab(0)"><span class="tab-icon">💰</span>今日价格</div>
+    <div class="tab" onclick="switchTab(1)"><span class="tab-icon">📈</span>价格历史</div>
+  </div>
+
+  <div class="panel active" id="panel0">
+    <div id="todayContent">
+      <div class="loading">
+        <div class="loading-spinner"></div>
+        <div>正在读取 Excel 数据…</div>
+      </div>
     </div>
   </div>
-</div>
 
-<div class="panel" id="panel1">
-  <div id="historyContent">
-    <div class="loading"><div class="loading-spinner"></div></div>
+  <div class="panel" id="panel1">
+    <div id="historyContent">
+      <div class="loading"><div class="loading-spinner"></div></div>
+    </div>
   </div>
-</div>
 
-<div class="bottom-nav">
-  <div class="nav-item active" onclick="switchTab(0)"><span class="nav-icon">💰</span><span class="nav-label">今日价格</span></div>
-  <div class="nav-item" onclick="switchTab(1)"><span class="nav-icon">📈</span><span class="nav-label">价格历史</span></div>
+  <div class="bottom-nav">
+    <div class="nav-item active" onclick="switchTab(0)"><span class="nav-icon">💰</span><span class="nav-label">今日价格</span></div>
+    <div class="nav-item" onclick="switchTab(1)"><span class="nav-icon">📈</span><span class="nav-label">价格历史</span></div>
+  </div>
 </div>
 
 <script>
+// ============ 登录逻辑 ============
+const CORRECT_USER = 'lianqi';
+const CORRECT_PASS = 'lianqi';
+
+function doLogin() {
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value;
+  const errEl = document.getElementById('loginError');
+  if (u === CORRECT_USER && p === CORRECT_PASS) {
+    document.getElementById('loginScreen').style.display = 'none';
+    const app = document.getElementById('appScreen');
+    app.classList.add('visible');
+    loadExcel();
+  } else {
+    errEl.style.display = 'block';
+    document.getElementById('loginPass').value = '';
+    setTimeout(() => { errEl.style.display = 'none'; }, 3000);
+  }
+}
+
+function doLogout() {
+  document.getElementById('appScreen').classList.remove('visible');
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
+}
+
+// Allow Enter key to submit login
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && document.getElementById('loginScreen').style.display !== 'none') {
+    doLogin();
+  }
+});
+
 // ============ 配置 ============
-// 网站会自动读取同目录下的这个文件
 const EXCEL_FILE = '11.xlsx';
 
 let allClients = [];
@@ -198,27 +401,25 @@ let histRows = [];
 // ============ 加载 Excel ============
 async function loadExcel() {
   try {
-    const res = await fetch(EXCEL_FILE + '?t=' + Date.now()); // 加时间戳防缓存
+    const res = await fetch(EXCEL_FILE + '?t=' + Date.now());
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const buf = await res.arrayBuffer();
     const wb = XLSX.read(buf, { type: 'array' });
 
-    // === 解析 Sheet1: 今日价格 ===
     const sheet1Name = wb.SheetNames[0];
     const sheet1 = XLSX.utils.sheet_to_json(wb.Sheets[sheet1Name], { header: 1, defval: null });
-
     allClients = parseSheet1(sheet1);
 
-    // === 解析 Sheet2: 价格历史 ===
     const sheet2Name = wb.SheetNames.find(n => /sheet2/i.test(n)) || wb.SheetNames[2];
     if (sheet2Name) {
       const sheet2 = XLSX.utils.sheet_to_json(wb.Sheets[sheet2Name], { header: 1, defval: null });
       parseSheet2(sheet2);
     }
 
-    // 更新时间显示
     const now = new Date();
-    document.getElementById('dataBadge').textContent = '✓ 已加载';
+    const badge = document.getElementById('dataBadge');
+    badge.textContent = '✓ 已加载';
+    badge.className = 'header-badge loaded';
     document.getElementById('updateTime').textContent =
       '数据更新于 ' + now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' +
       String(now.getDate()).padStart(2,'0') + ' ' + String(now.getHours()).padStart(2,'0') + ':' +
@@ -233,13 +434,10 @@ async function loadExcel() {
 
 function parseSheet1(rows) {
   if (!rows || rows.length < 2) return [];
-  const header = rows[0].map(h => h ? String(h).trim() : '');
   const out = [];
-
   for (let i = 1; i < rows.length; i++) {
     const r = rows[i];
     if (!r || !r[0]) continue;
-
     const c = {
       name: String(r[0]).trim(),
       price: toNum(r[1]),
@@ -248,9 +446,6 @@ function parseSheet1(rows) {
       kw3: toNum(r[4]),
       tiers: []
     };
-
-    // 从第 6 列开始，每 3 列一组（日期, 价格, 资金池）
-    // 列索引: 5(日期1空), 6(价格1), 7(资金池1), 8(日期2空), 9(价格2), 10(资金池2)...
     for (let col = 5; col < r.length; col += 3) {
       const price = toNum(r[col + 1]);
       const pool = toNum(r[col + 2]);
@@ -265,7 +460,6 @@ function parseSheet1(rows) {
 
 function parseSheet2(rows) {
   if (!rows || rows.length < 2) return;
-  // 第一行是日期表头，从第 3 列开始（前两列通常是备注/客户名）
   const headerRow = rows[0] || [];
   histDates = [];
   for (let i = 2; i < headerRow.length; i++) {
@@ -273,12 +467,10 @@ function parseSheet2(rows) {
       histDates.push(String(headerRow[i]).trim());
     }
   }
-
   histRows = [];
   for (let i = 1; i < rows.length; i++) {
     const r = rows[i];
     if (!r) continue;
-    // 客户名通常在第 2 列
     const name = r[1] ? String(r[1]).trim() : '';
     if (!name) continue;
     const values = [];
@@ -305,9 +497,18 @@ function renderToday() {
 
   document.getElementById('todayContent').innerHTML = `
     <div class="summary">
-      <div class="sum-card"><div class="sum-num">${allClients.length}</div><div class="sum-label">客户总数</div></div>
-      <div class="sum-card"><div class="sum-num" style="color:var(--green)">${equal}</div><div class="sum-label">账目相等</div></div>
-      <div class="sum-card"><div class="sum-num" style="color:var(--red)">${diff}</div><div class="sum-label">待核查</div></div>
+      <div class="sum-card">
+        <div class="sum-num">${allClients.length}</div>
+        <div class="sum-label">客户总数</div>
+      </div>
+      <div class="sum-card">
+        <div class="sum-num green">${equal}</div>
+        <div class="sum-label">账目相等</div>
+      </div>
+      <div class="sum-card">
+        <div class="sum-num red">${diff}</div>
+        <div class="sum-label">待核查</div>
+      </div>
     </div>
     <div class="search-wrap">
       <span class="search-icon">🔍</span>
@@ -324,7 +525,7 @@ function renderClientList(arr) {
   list.innerHTML = arr.map((c, i) => {
     const statusClass = c.status === '相等' ? 'equal' : (c.status === '不相等' ? 'not-equal' : 'not-found');
     const statusText = c.status === '相等' ? '✓ 账目相等' : (c.status === '不相等' ? '✗ 不相等' : (c.status || '—'));
-    const priceDisplay = c.price ? (c.price/1000).toFixed(0) + 'k' : '—';
+    const priceDisplay = fmtPrice(c.price);
     const lastPool = [...c.tiers].reverse().find(t => t.pool !== 0);
     const summary = lastPool ? `资金池: ${fmtPool(lastPool.pool)}` : `${c.tiers.length} 个价格档`;
 
@@ -332,17 +533,17 @@ function renderClientList(arr) {
       const isCurrent = ti === c.tiers.length - 1;
       const poolCls = t.pool === 0 ? 'zero' : (t.pool > 0 ? 'positive' : 'negative');
       return `<div class="price-tier ${isCurrent?'current':''}">
-        <div class="tier-price ${isCurrent?'current':''}">${t.p ? (t.p/1000).toFixed(0)+'k' : '—'}</div>
+        <div class="tier-price ${isCurrent?'current':''}">${fmtPrice(t.p)}</div>
         <div class="tier-pool ${poolCls}">${fmtPool(t.pool)}</div>
       </div>`;
     }).join('');
 
     const kwHtml = (c.kw2 || c.kw3) ? `
       <div class="detail-section">
-        <div class="detail-label">保证金 KW</div>
+        <div class="detail-label">商品价格 KW</div>
         <div class="kw-row">
-          ${c.kw2 ? `<div class="kw-badge"><span>KW2</span>${(c.kw2/1000).toFixed(0)}k</div>` : ''}
-          ${c.kw3 ? `<div class="kw-badge"><span>KW3</span>${(c.kw3/1000).toFixed(0)}k</div>` : ''}
+          ${c.kw2 ? `<div class="kw-badge"><span>KW2</span>${fmtPrice(c.kw2)}</div>` : ''}
+          ${c.kw3 ? `<div class="kw-badge"><span>KW3</span>${fmtPrice(c.kw3)}</div>` : ''}
         </div>
       </div>` : '';
 
@@ -374,9 +575,29 @@ function fmtPool(v) {
   if (v === 0 || v === null || v === undefined) return '—';
   const abs = Math.abs(v);
   const sign = v < 0 ? '-' : '+';
-  if (abs >= 1e8) return sign + (abs/1e8).toFixed(2) + '亿';
-  if (abs >= 1e4) return sign + (abs/1e4).toFixed(1) + '万';
-  return sign + v.toLocaleString();
+  return sign + fmtIDR(abs);
+}
+
+// 印尼盾格式：百万以上用"条"，千以上用"k"
+function fmtIDR(abs) {
+  if (abs >= 1e6) {
+    const tiao = abs / 1e6;
+    // 去掉末尾多余零，最多2位小数
+    const s = parseFloat(tiao.toFixed(2));
+    return s + '条';
+  }
+  if (abs >= 1000) {
+    const k = abs / 1000;
+    const s = parseFloat(k.toFixed(1));
+    return s + 'k';
+  }
+  return abs.toLocaleString();
+}
+
+// 价格专用格式（不带正负号）
+function fmtPrice(v) {
+  if (!v) return '—';
+  return fmtIDR(Math.abs(v));
 }
 
 function toggleCard(i) { document.getElementById('card-' + i).classList.toggle('expanded'); }
@@ -409,7 +630,9 @@ function renderHistory() {
 
 // ============ 错误显示 ============
 function showError(msg) {
-  document.getElementById('dataBadge').textContent = '✗ 加载失败';
+  const badge = document.getElementById('dataBadge');
+  badge.textContent = '✗ 加载失败';
+  badge.className = 'header-badge error';
   document.getElementById('todayContent').innerHTML = `
     <div class="error">
       <div style="font-size:32px;margin-bottom:10px">⚠️</div>
@@ -432,9 +655,6 @@ function switchTab(i) {
   document.querySelectorAll('.tab').forEach((t,j) => t.classList.toggle('active', j === i));
   document.querySelectorAll('.nav-item').forEach((n,j) => n.classList.toggle('active', j === i));
 }
-
-// ============ 启动 ============
-loadExcel();
 </script>
 </body>
 </html>
