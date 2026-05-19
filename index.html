@@ -799,7 +799,7 @@
   .lb-card {
     background: #fff; border: 1px solid var(--border);
     border-radius: 8px; margin-bottom: 10px; padding: 14px 16px;
-    box-shadow: var(--shadow); position: relative; overflow: hidden;
+    box-shadow: var(--shadow); position: relative; overflow: visible;
     display: flex; align-items: center; gap: 12px;
     transition: transform 0.2s, box-shadow 0.2s;
     animation: cardEnter 0.5s ease both;
@@ -882,19 +882,19 @@
 
   /* 赞美文字泡泡 */
   .praise-bubble {
-    position: absolute; top: -38px; left: 50%; transform: translateX(-50%) scale(0);
+    position: absolute; top: calc(100% + 6px); left: 50%; transform: translateX(-50%) scale(0);
     background: linear-gradient(135deg, #f59e0b, #d97706);
     color: #fff; font-size: 11px; font-weight: 700;
     padding: 6px 12px; border-radius: 20px; white-space: nowrap;
     box-shadow: 0 4px 12px rgba(245,158,11,0.4);
-    pointer-events: none; z-index: 10;
+    pointer-events: none; z-index: 99;
     transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s;
     opacity: 0;
   }
   .praise-bubble::after {
-    content: ''; position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%);
-    border: 5px solid transparent; border-top-color: #d97706;
-    border-bottom: none;
+    content: ''; position: absolute; top: -5px; left: 50%; transform: translateX(-50%);
+    border: 5px solid transparent; border-bottom-color: #f59e0b;
+    border-top: none;
   }
   .praise-bubble.show { transform: translateX(-50%) scale(1); opacity: 1; }
 
@@ -1924,10 +1924,17 @@ function renderLeaderboard() {
     return buildSimplePoorCard(e, i+1);
   }).join('');
 
-  // ── 价格排行榜 ──
-  const priceList = allClients
-    .filter(c => c.price !== null && c.price !== undefined)
-    .map(c => [c.name, c.price]);
+  // ── 价格排行榜（现行价格：资金池不为0的tier中最低价格；无则退回今日手填价格）──
+  const priceList = [];
+  allClients.forEach(c => {
+    const nonZeroTiers = c.tiers.filter(t => t.pool !== 0 && t.pool !== null && t.pool !== undefined);
+    if (nonZeroTiers.length > 0) {
+      const minPriceTier = nonZeroTiers.reduce((a, b) => a.p < b.p ? a : b);
+      priceList.push([c.name, minPriceTier.p]);
+    } else if (c.price !== null && c.price !== undefined) {
+      priceList.push([c.name, c.price]);
+    }
+  });
 
   const top5HighPrice = [...priceList].sort((a, b) => b[1] - a[1]).slice(0, 5);
   const top5LowPrice  = [...priceList].sort((a, b) => a[1] - b[1]).slice(0, 5);
@@ -2057,7 +2064,7 @@ function renderLeaderboard() {
     <div class="leaderboard-section" style="margin-top:16px">
       <div class="lb-header">
         <div class="lb-title">🔥 价格最高 TOP 5</div>
-        <div class="lb-subtitle">今日最贵</div>
+        <div class="lb-subtitle">现行价最高（最低非零资金池档位）</div>
       </div>
       ${highPriceCards}
     </div>
@@ -2065,7 +2072,7 @@ function renderLeaderboard() {
     <div class="leaderboard-section" style="margin-top:24px">
       <div class="lb-header">
         <div class="lb-title">💚 价格最低 TOP 5</div>
-        <div class="lb-subtitle">今日最实惠</div>
+        <div class="lb-subtitle">现行价最低（最低非零资金池档位）</div>
       </div>
       ${lowPriceCards}
     </div>
