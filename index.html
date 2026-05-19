@@ -3,312 +3,819 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>价格资金池</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<title>加气砖 · 价格资金池</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Bebas+Neue&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root {
-    --bg: #f5f7fb;
+    /* AAC 加气砖配色: 工业灰 + 砖体米白 + 钢蓝 + 警示橙 */
+    --bg: #eef0f3;
     --bg2: #ffffff;
-    --bg3: #eef1f8;
+    --bg3: #e4e7ec;
+    --bg-brick: #f0ebe0;     /* 砖体米白 */
+    --bg-brick2: #e8e1d2;
     --card: #ffffff;
-    --card2: #f0f3fa;
-    --border: #dde3ef;
-    --border2: #c8d2e8;
-    --gold: #e07b00;
-    --gold2: #f5a623;
-    --teal: #0099a8;
-    --red: #d93025;
-    --blue: #1a6fd4;
+    --card2: #f4f5f8;
+    --border: #d6dae2;
+    --border2: #b8c0ce;
+    --steel: #2c4a6b;        /* 钢蓝 (主品牌色) */
+    --steel2: #3a5d82;
+    --steel-light: #6e8aac;
+    --concrete: #6b7280;     /* 混凝土灰 */
+    --rebar: #d97706;        /* 钢筋橙 */
+    --rebar2: #f59e0b;
+    --safety: #ea580c;       /* 警示橙 */
+    --teal: #0d9488;
+    --red: #dc2626;
+    --green: #16a34a;
     --text: #1a2236;
-    --text2: #5a6a85;
-    --text3: #9aa5ba;
-    --green: #1a8a4a;
-    --shadow: 0 2px 12px rgba(60,80,130,0.08);
-    --shadow2: 0 4px 20px rgba(60,80,130,0.13);
+    --text2: #4b5563;
+    --text3: #9ca3af;
+    --shadow: 0 2px 12px rgba(44,74,107,0.08);
+    --shadow2: 0 6px 24px rgba(44,74,107,0.16);
+    --shadow-brick: 0 4px 16px rgba(120,100,70,0.18);
     --mono: 'Space Mono', monospace;
     --sans: 'Noto Sans SC', sans-serif;
+    --display: 'Bebas Neue', sans-serif;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
   body {
     font-family: var(--sans); background: var(--bg); color: var(--text);
     min-height: 100vh; max-width: 480px; margin: 0 auto;
-    padding-bottom: 70px; overflow-x: hidden;
+    padding-bottom: 76px; overflow-x: hidden;
+    position: relative;
   }
 
-  /* ===== LOGIN SCREEN ===== */
+  /* ===== 加气砖纹理背景 (微观气孔图案) ===== */
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background-image:
+      radial-gradient(circle at 12% 18%, rgba(180,170,150,0.08) 1.5px, transparent 2px),
+      radial-gradient(circle at 45% 67%, rgba(180,170,150,0.06) 2px, transparent 2.5px),
+      radial-gradient(circle at 78% 30%, rgba(180,170,150,0.07) 1.5px, transparent 2px),
+      radial-gradient(circle at 22% 88%, rgba(180,170,150,0.06) 2px, transparent 2.5px),
+      radial-gradient(circle at 88% 75%, rgba(180,170,150,0.07) 1.5px, transparent 2px);
+    background-size: 80px 80px, 120px 120px, 100px 100px, 140px 140px, 90px 90px;
+    pointer-events: none; z-index: 0;
+  }
+  body > * { position: relative; z-index: 1; }
+
+  /* ===================== */
+  /* 登录页 — 加气砖工业风 */
+  /* ===================== */
   #loginScreen {
-    position: fixed; inset: 0; background: linear-gradient(150deg, #e8edf8 0%, #f5f7fb 50%, #dfe6f5 100%);
+    position: fixed; inset: 0;
+    background: linear-gradient(160deg, #2c4a6b 0%, #1e3550 35%, #0f1e30 100%);
     z-index: 999; display: flex; align-items: center; justify-content: center;
-    padding: 24px;
+    padding: 24px; overflow: hidden;
   }
+  /* 登录页背景: 浮动的加气砖块 */
+  #loginScreen::before {
+    content: ''; position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 60px 30px;
+    background-position: 0 0, 30px 15px;
+    opacity: 0.5;
+    animation: gridMove 20s linear infinite;
+  }
+  @keyframes gridMove {
+    0% { background-position: 0 0, 30px 15px; }
+    100% { background-position: 60px 30px, 90px 45px; }
+  }
+  .floating-brick {
+    position: absolute; background: linear-gradient(135deg, rgba(240,235,224,0.06), rgba(240,235,224,0.02));
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 2px;
+    animation: floatBrick 14s ease-in-out infinite;
+  }
+  .floating-brick::after {
+    content: ''; position: absolute; inset: 0;
+    background-image: radial-gradient(circle at 30% 40%, rgba(0,0,0,0.15) 1px, transparent 1.5px),
+                      radial-gradient(circle at 70% 65%, rgba(0,0,0,0.15) 1.5px, transparent 2px);
+    background-size: 20px 20px;
+  }
+  .fb1 { width: 90px; height: 45px; top: 12%; left: 8%; animation-delay: 0s; }
+  .fb2 { width: 70px; height: 35px; top: 25%; right: 10%; animation-delay: -3s; }
+  .fb3 { width: 110px; height: 55px; bottom: 18%; left: 15%; animation-delay: -7s; }
+  .fb4 { width: 80px; height: 40px; bottom: 30%; right: 8%; animation-delay: -10s; }
+  @keyframes floatBrick {
+    0%, 100% { transform: translate(0,0) rotate(-2deg); opacity: 0.4; }
+    50% { transform: translate(8px,-12px) rotate(2deg); opacity: 0.7; }
+  }
+
   .login-box {
-    background: #fff; border-radius: 20px; padding: 40px 32px 36px;
-    box-shadow: 0 8px 40px rgba(60,80,130,0.18); width: 100%; max-width: 360px;
-    animation: fadeInUp 0.4s ease;
+    background: rgba(255,255,255,0.97); border-radius: 4px;
+    padding: 40px 32px 32px;
+    width: 100%; max-width: 360px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.1);
+    animation: loginEnter 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative; overflow: hidden;
   }
-  @keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+  .login-box::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+    background: linear-gradient(90deg, var(--rebar), var(--rebar2), var(--rebar));
+    background-size: 200% 100%;
+    animation: shimmer 3s linear infinite;
   }
-  .login-logo {
-    text-align: center; margin-bottom: 28px;
+  @keyframes shimmer {
+    0% { background-position: 0% 0; }
+    100% { background-position: -200% 0; }
   }
+  @keyframes loginEnter {
+    from { opacity: 0; transform: translateY(30px) scale(0.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .login-logo { text-align: center; margin-bottom: 28px; }
   .login-logo-icon {
-    width: 60px; height: 60px; background: linear-gradient(135deg, #1a6fd4, #0099a8);
-    border-radius: 16px; display: flex; align-items: center; justify-content: center;
-    font-size: 28px; margin: 0 auto 14px; box-shadow: 0 4px 16px rgba(26,111,212,0.3);
+    width: 72px; height: 72px;
+    background: linear-gradient(135deg, #f0ebe0 0%, #d4cbb5 100%);
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 16px;
+    box-shadow: 0 8px 24px rgba(120,100,70,0.3), inset 0 1px 0 rgba(255,255,255,0.6);
+    position: relative; overflow: hidden;
+    animation: brickPulse 3s ease-in-out infinite;
   }
+  @keyframes brickPulse {
+    0%, 100% { box-shadow: 0 8px 24px rgba(120,100,70,0.3), inset 0 1px 0 rgba(255,255,255,0.6); }
+    50% { box-shadow: 0 12px 32px rgba(217,119,6,0.35), inset 0 1px 0 rgba(255,255,255,0.6); }
+  }
+  /* 砖体气孔纹理 */
+  .login-logo-icon::before {
+    content: ''; position: absolute; inset: 0;
+    background-image:
+      radial-gradient(circle at 25% 30%, rgba(120,100,70,0.4) 1.5px, transparent 2px),
+      radial-gradient(circle at 70% 60%, rgba(120,100,70,0.35) 2px, transparent 2.5px),
+      radial-gradient(circle at 45% 80%, rgba(120,100,70,0.3) 1.5px, transparent 2px),
+      radial-gradient(circle at 80% 25%, rgba(120,100,70,0.35) 1px, transparent 1.5px);
+    background-size: 100% 100%;
+  }
+  .login-logo-icon svg { position: relative; z-index: 1; width: 38px; height: 38px; }
   .login-logo h1 {
-    font-size: 20px; font-weight: 700; color: var(--text); letter-spacing: 0.5px;
+    font-size: 22px; font-weight: 900; color: var(--steel); letter-spacing: 1px;
+  }
+  .login-logo .brand-en {
+    font-family: var(--display); font-size: 13px; color: var(--rebar);
+    letter-spacing: 4px; margin-top: 2px;
   }
   .login-logo p {
-    font-size: 12px; color: var(--text3); margin-top: 4px;
+    font-size: 12px; color: var(--text3); margin-top: 8px; letter-spacing: 0.5px;
   }
   .login-field { margin-bottom: 16px; }
   .login-field label {
-    display: block; font-size: 12px; font-weight: 600; color: var(--text2);
-    margin-bottom: 6px; letter-spacing: 0.5px;
+    display: block; font-size: 11px; font-weight: 700; color: var(--steel);
+    margin-bottom: 6px; letter-spacing: 2px;
   }
   .login-field input {
-    width: 100%; padding: 12px 16px;
-    border: 1.5px solid var(--border); border-radius: 10px;
+    width: 100%; padding: 13px 16px;
+    border: 1.5px solid var(--border); border-radius: 4px;
     font-size: 15px; font-family: var(--sans); color: var(--text);
-    background: var(--bg3); outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+    background: var(--bg3); outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
   }
   .login-field input:focus {
-    border-color: var(--blue); background: #fff;
-    box-shadow: 0 0 0 3px rgba(26,111,212,0.1);
+    border-color: var(--rebar); background: #fff;
+    box-shadow: 0 0 0 3px rgba(217,119,6,0.12);
   }
   .login-btn {
-    width: 100%; padding: 13px; margin-top: 8px;
-    background: linear-gradient(135deg, #1a6fd4, #1058b0);
-    color: #fff; border: none; border-radius: 10px;
-    font-size: 15px; font-weight: 600; font-family: var(--sans);
-    cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;
-    box-shadow: 0 4px 14px rgba(26,111,212,0.35);
+    width: 100%; padding: 14px; margin-top: 12px;
+    background: linear-gradient(135deg, var(--steel), var(--steel2));
+    color: #fff; border: none; border-radius: 4px;
+    font-size: 15px; font-weight: 700; font-family: var(--sans);
+    letter-spacing: 4px; cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    box-shadow: 0 6px 18px rgba(44,74,107,0.4);
+    position: relative; overflow: hidden;
   }
-  .login-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(26,111,212,0.4); }
+  .login-btn::after {
+    content: ''; position: absolute; top: 50%; left: 50%;
+    width: 0; height: 0; border-radius: 50%;
+    background: rgba(255,255,255,0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.5s, height 0.5s;
+  }
+  .login-btn:active::after { width: 300px; height: 300px; }
+  .login-btn:hover { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(44,74,107,0.5); }
   .login-btn:active { transform: translateY(0); }
   .login-error {
-    background: #fff0f0; border: 1px solid #f5c6c6; color: var(--red);
-    border-radius: 8px; padding: 10px 14px; font-size: 13px;
+    background: rgba(220,38,38,0.06); border: 1px solid rgba(220,38,38,0.2);
+    color: var(--red); border-radius: 4px; padding: 10px 14px; font-size: 13px;
     text-align: center; margin-top: 12px; display: none;
+    animation: shake 0.4s;
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
   }
 
-  /* ===== MAIN APP ===== */
-  #appScreen { display: none; }
-  #appScreen.visible { display: block; }
+  /* ===================== */
+  /* 主应用 */
+  /* ===================== */
+  #appScreen { display: none; opacity: 0; }
+  #appScreen.visible { display: block; animation: appFadeIn 0.5s ease forwards; }
+  @keyframes appFadeIn { to { opacity: 1; } }
 
+  /* 头部 — 工业风钢蓝 + 砖块装饰 */
   .header {
-    background: #fff;
-    padding: 18px 18px 14px;
-    border-bottom: 1px solid var(--border);
+    background: linear-gradient(135deg, var(--steel) 0%, var(--steel2) 100%);
+    padding: 18px 18px 16px;
+    color: #fff;
     position: sticky; top: 0; z-index: 100;
-    box-shadow: var(--shadow);
+    box-shadow: 0 4px 20px rgba(44,74,107,0.25);
+    overflow: hidden;
   }
+  /* 头部装饰: 砖块叠加纹理 */
+  .header::before {
+    content: ''; position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+    background-size: 60px 24px;
+    background-position: 0 0;
+    pointer-events: none;
+  }
+  .header::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--rebar) 0%, var(--rebar2) 50%, var(--rebar) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 4s linear infinite;
+  }
+  .header > * { position: relative; z-index: 1; }
   .header-top { display: flex; justify-content: space-between; align-items: center; }
+  .header-brand { display: flex; align-items: center; gap: 8px; }
+  .brand-logo {
+    width: 28px; height: 28px;
+    background: linear-gradient(135deg, #f0ebe0, #d4cbb5);
+    border-radius: 3px; position: relative;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  }
+  .brand-logo::before {
+    content: ''; position: absolute; inset: 2px;
+    background-image:
+      radial-gradient(circle at 30% 40%, rgba(120,100,70,0.5) 1px, transparent 1.5px),
+      radial-gradient(circle at 65% 60%, rgba(120,100,70,0.4) 1px, transparent 1.5px);
+    background-size: 12px 12px;
+  }
   .header-title {
-    font-family: var(--mono); font-size: 11px; color: var(--blue);
+    font-family: var(--display); font-size: 13px; color: rgba(255,255,255,0.95);
     letter-spacing: 3px; font-weight: 700;
   }
   .header-badge {
-    background: rgba(26,111,212,0.1); border: 1px solid rgba(26,111,212,0.25);
-    color: var(--blue); font-size: 10px; font-family: var(--mono);
-    padding: 3px 10px; border-radius: 20px; font-weight: 700;
+    background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25);
+    color: #fff; font-size: 10px; font-family: var(--mono);
+    padding: 3px 10px; border-radius: 2px; font-weight: 700;
+    backdrop-filter: blur(8px);
   }
   .header-badge.loaded {
-    background: rgba(26,138,74,0.1); border-color: rgba(26,138,74,0.25);
-    color: var(--green);
+    background: rgba(22,163,74,0.25); border-color: rgba(74,222,128,0.5);
+    color: #bbf7d0;
   }
   .header-badge.error {
-    background: rgba(217,48,37,0.08); border-color: rgba(217,48,37,0.25);
-    color: var(--red);
+    background: rgba(220,38,38,0.25); border-color: rgba(248,113,113,0.5);
+    color: #fecaca;
   }
-  .header-sub { font-size: 18px; font-weight: 700; margin-top: 6px; color: var(--text); }
-  .header-time { font-size: 10px; color: var(--text3); margin-top: 3px; font-family: var(--mono); }
+  .header-sub {
+    font-size: 19px; font-weight: 900; margin-top: 8px; color: #fff;
+    letter-spacing: 1px;
+  }
+  .header-sub-en {
+    font-family: var(--display); font-size: 10px; color: var(--rebar2);
+    letter-spacing: 4px; margin-top: 2px;
+  }
+  .header-time {
+    font-size: 10px; color: rgba(255,255,255,0.6);
+    margin-top: 4px; font-family: var(--mono);
+  }
   .header-actions { display: flex; align-items: center; gap: 10px; }
   .logout-btn {
-    background: none; border: 1px solid var(--border2); border-radius: 8px;
-    color: var(--text2); font-size: 11px; padding: 4px 10px; cursor: pointer;
+    background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 3px; color: #fff; font-size: 11px;
+    padding: 4px 10px; cursor: pointer;
     font-family: var(--sans); transition: all 0.15s;
+    backdrop-filter: blur(8px);
   }
-  .logout-btn:hover { border-color: var(--red); color: var(--red); background: rgba(217,48,37,0.05); }
+  .logout-btn:hover {
+    background: rgba(220,38,38,0.3); border-color: rgba(248,113,113,0.6);
+  }
 
+  /* 标签栏 */
   .tabs {
     background: #fff; display: flex;
-    border-bottom: 2px solid var(--border);
-    position: sticky; top: 93px; z-index: 99;
-    box-shadow: 0 2px 8px rgba(60,80,130,0.05);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 100px; z-index: 99;
+    box-shadow: 0 2px 12px rgba(44,74,107,0.06);
   }
   .tab {
-    flex: 1; padding: 11px 4px; text-align: center; font-size: 13px;
+    flex: 1; padding: 12px 4px; text-align: center; font-size: 12px;
     color: var(--text3); cursor: pointer;
-    border-bottom: 2px solid transparent; margin-bottom: -2px;
-    transition: color 0.2s;
+    border-bottom: 3px solid transparent; margin-bottom: -1px;
+    transition: color 0.25s, background 0.2s;
+    position: relative;
   }
-  .tab.active { color: var(--blue); border-bottom-color: var(--blue); font-weight: 600; }
-  .tab-icon { font-size: 16px; display: block; margin-bottom: 2px; }
+  .tab.active {
+    color: var(--steel); border-bottom-color: var(--rebar);
+    font-weight: 700;
+  }
+  .tab:not(.active):hover { background: rgba(44,74,107,0.04); }
+  .tab-icon {
+    font-size: 18px; display: block; margin-bottom: 2px;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .tab.active .tab-icon { transform: scale(1.15); }
 
   .panel { display: none; padding: 14px; }
-  .panel.active { display: block; }
-
-  /* Loading / error states */
-  .loading, .error { text-align: center; padding: 60px 20px; color: var(--text2); }
-  .loading-spinner {
-    width: 38px; height: 38px; border: 3px solid var(--border);
-    border-top-color: var(--blue); border-radius: 50%;
-    animation: spin 0.8s linear infinite; margin: 0 auto 16px;
+  .panel.active { display: block; animation: panelIn 0.4s ease; }
+  @keyframes panelIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
   }
-  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* 加载/错误状态 — 加气砖叠放动画 */
+  .loading, .error { text-align: center; padding: 60px 20px; color: var(--text2); }
+  .brick-loader {
+    width: 80px; height: 60px; margin: 0 auto 20px;
+    position: relative;
+  }
+  .brick-loader .bk {
+    position: absolute; width: 32px; height: 16px;
+    background: linear-gradient(135deg, #f0ebe0, #d4cbb5);
+    border: 1px solid #c4b89a; border-radius: 2px;
+    box-shadow: 0 2px 4px rgba(120,100,70,0.25);
+    animation: stackBrick 1.6s ease-in-out infinite;
+  }
+  .brick-loader .bk::before {
+    content: ''; position: absolute; inset: 0;
+    background-image: radial-gradient(circle at 30% 50%, rgba(120,100,70,0.4) 0.8px, transparent 1.2px);
+    background-size: 8px 8px;
+  }
+  .brick-loader .bk:nth-child(1) { left: 0; bottom: 0; animation-delay: 0s; }
+  .brick-loader .bk:nth-child(2) { left: 34px; bottom: 0; animation-delay: 0.1s; }
+  .brick-loader .bk:nth-child(3) { left: 17px; bottom: 18px; animation-delay: 0.2s; }
+  .brick-loader .bk:nth-child(4) { left: 51px; bottom: 18px; animation-delay: 0.3s; }
+  .brick-loader .bk:nth-child(5) { left: 34px; bottom: 36px; animation-delay: 0.4s; }
+  @keyframes stackBrick {
+    0%, 100% { transform: translateY(0); opacity: 1; }
+    50% { transform: translateY(-6px); opacity: 0.5; }
+  }
+  .loading-text {
+    font-family: var(--mono); font-size: 12px;
+    color: var(--text3); letter-spacing: 2px;
+  }
+  .loading-text::after {
+    content: '...';
+    animation: dots 1.4s steps(4) infinite;
+  }
+  @keyframes dots {
+    0% { content: ''; }
+    25% { content: '.'; }
+    50% { content: '..'; }
+    75% { content: '...'; }
+  }
+
   .error { color: var(--red); }
   .error-detail { font-size: 12px; color: var(--text2); margin-top: 10px; line-height: 1.6; }
   .error-help {
     background: #fff8f0; border: 1px solid #f5dfc6;
-    border-radius: 10px; padding: 14px; margin-top: 20px;
+    border-radius: 4px; padding: 14px; margin-top: 20px;
     text-align: left; font-size: 12px; color: var(--text2); line-height: 1.7;
   }
   .error-help code {
-    background: var(--bg3); padding: 2px 6px; border-radius: 4px;
-    font-family: var(--mono); color: var(--gold); font-size: 11px;
+    background: var(--bg3); padding: 2px 6px; border-radius: 3px;
+    font-family: var(--mono); color: var(--rebar); font-size: 11px;
   }
 
-  /* Summary cards */
+  /* 摘要卡片 — 加气砖立体效果 */
   .summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
   .sum-card {
     background: #fff; border: 1px solid var(--border);
-    border-radius: 12px; padding: 12px 8px; text-align: center;
+    border-radius: 4px; padding: 14px 8px 12px; text-align: center;
     box-shadow: var(--shadow);
+    position: relative; overflow: hidden;
+    transition: transform 0.25s, box-shadow 0.25s;
+    opacity: 0; transform: translateY(16px);
+    animation: cardEnter 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
-  .sum-num { font-family: var(--mono); font-size: 18px; font-weight: 700; color: var(--blue); }
+  .sum-card:nth-child(1) { animation-delay: 0.05s; }
+  .sum-card:nth-child(2) { animation-delay: 0.12s; }
+  .sum-card:nth-child(3) { animation-delay: 0.19s; }
+  @keyframes cardEnter {
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .sum-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow2);
+  }
+  .sum-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: var(--steel);
+  }
+  .sum-card.gold::before { background: var(--rebar); }
+  .sum-card.green::before { background: var(--green); }
+  .sum-card.red::before { background: var(--red); }
+  .sum-num {
+    font-family: var(--mono); font-size: 19px; font-weight: 700;
+    color: var(--steel); line-height: 1;
+  }
   .sum-num.green { color: var(--green); }
   .sum-num.red { color: var(--red); }
-  .sum-label { font-size: 10px; color: var(--text2); margin-top: 4px; font-weight: 500; }
+  .sum-num.gold { color: var(--rebar); }
+  .sum-label {
+    font-size: 10px; color: var(--text2); margin-top: 5px;
+    font-weight: 500; letter-spacing: 1px;
+  }
+  .sum-unit {
+    font-size: 11px; color: var(--text3); font-weight: 400; margin-left: 2px;
+  }
 
-  /* Search */
+  /* 搜索框 */
   .search-wrap { margin-bottom: 12px; position: relative; }
   .search-input {
     width: 100%; background: #fff; border: 1.5px solid var(--border);
-    border-radius: 10px; padding: 10px 14px 10px 40px; color: var(--text);
+    border-radius: 4px; padding: 10px 14px 10px 40px; color: var(--text);
     font-size: 14px; font-family: var(--sans); outline: none;
     box-shadow: var(--shadow); transition: border-color 0.2s, box-shadow 0.2s;
   }
-  .search-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(26,111,212,0.1); }
+  .search-input:focus {
+    border-color: var(--rebar);
+    box-shadow: 0 0 0 3px rgba(217,119,6,0.12);
+  }
   .search-input::placeholder { color: var(--text3); }
-  .search-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); font-size: 15px; }
+  .search-icon {
+    position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+    font-size: 15px; color: var(--text3);
+  }
 
-  /* Client cards */
+  /* 客户卡片 — 砖块叠放效果 */
   .client-card {
-    background: #fff; border: 1.5px solid var(--border);
-    border-radius: 14px; margin-bottom: 10px; overflow: hidden;
-    box-shadow: var(--shadow); transition: border-color 0.2s, box-shadow 0.2s;
+    background: #fff; border: 1px solid var(--border);
+    border-radius: 4px; margin-bottom: 10px; overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: border-color 0.2s, box-shadow 0.25s, transform 0.2s;
+    position: relative;
+    opacity: 0; transform: translateY(12px);
+    animation: cardEnter 0.4s ease forwards;
   }
-  .client-card:hover { box-shadow: var(--shadow2); }
-  .client-card.expanded { border-color: rgba(26,111,212,0.4); box-shadow: 0 4px 20px rgba(26,111,212,0.12); }
-  .client-header { display: flex; align-items: center; padding: 13px 14px; cursor: pointer; gap: 11px; }
-  .client-avatar {
-    width: 40px; height: 40px; border-radius: 11px;
-    background: linear-gradient(135deg, #dde8f8, #c8daf5); border: 1.5px solid #b8cef0;
-    display: flex; align-items: center; justify-content: center;
-    font-family: var(--mono); font-size: 10px; color: var(--blue); font-weight: 700; flex-shrink: 0;
+  /* 客户卡片左侧条 — 砖体配色 */
+  .client-card::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    background: var(--steel-light);
+    transition: background 0.25s, width 0.25s;
   }
-  .client-info { flex: 1; min-width: 0; }
-  .client-name { font-weight: 700; font-size: 15px; color: var(--text); }
-  .client-meta { font-size: 11px; color: var(--text2); margin-top: 2px; }
-  .client-right { text-align: right; flex-shrink: 0; }
-  .price-today { font-family: var(--mono); font-size: 16px; font-weight: 700; color: var(--blue); }
-  .status-badge { font-size: 10px; padding: 2px 7px; border-radius: 6px; margin-top: 3px; display: inline-block; font-weight: 600; }
-  .status-badge.equal { background: rgba(26,138,74,0.1); color: var(--green); border: 1px solid rgba(26,138,74,0.25); }
-  .status-badge.not-equal { background: rgba(217,48,37,0.09); color: var(--red); border: 1px solid rgba(217,48,37,0.22); }
-  .status-badge.not-found { background: rgba(224,123,0,0.1); color: var(--gold); border: 1px solid rgba(224,123,0,0.25); }
-  .expand-arrow { color: var(--text3); font-size: 12px; transition: transform 0.2s; }
-  .expanded .expand-arrow { transform: rotate(180deg); color: var(--blue); }
+  .client-card:hover::before { background: var(--rebar); width: 4px; }
+  .client-card:hover { box-shadow: var(--shadow2); transform: translateY(-1px); }
+  .client-card.expanded {
+    border-color: var(--rebar);
+    box-shadow: 0 6px 24px rgba(217,119,6,0.18);
+  }
+  .client-card.expanded::before { background: var(--rebar); width: 4px; }
 
-  .client-detail { display: none; border-top: 1px solid var(--border); padding: 14px; background: var(--bg3); }
-  .expanded .client-detail { display: block; }
-  .detail-section { margin-bottom: 12px; }
+  .client-header { display: flex; align-items: center; padding: 13px 14px; cursor: pointer; gap: 11px; }
+  /* 头像 — 加气砖纹理 */
+  .client-avatar {
+    width: 44px; height: 44px; border-radius: 4px;
+    background: linear-gradient(135deg, #f0ebe0 0%, #d4cbb5 100%);
+    border: 1px solid #c4b89a;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 11px; color: var(--steel);
+    font-weight: 700; flex-shrink: 0;
+    box-shadow: 0 2px 6px rgba(120,100,70,0.2), inset 0 1px 0 rgba(255,255,255,0.5);
+    position: relative; overflow: hidden;
+  }
+  .client-avatar::before {
+    content: ''; position: absolute; inset: 0;
+    background-image:
+      radial-gradient(circle at 25% 30%, rgba(120,100,70,0.35) 1px, transparent 1.5px),
+      radial-gradient(circle at 70% 60%, rgba(120,100,70,0.3) 1.2px, transparent 1.8px),
+      radial-gradient(circle at 45% 80%, rgba(120,100,70,0.28) 1px, transparent 1.5px);
+    background-size: 100% 100%;
+  }
+  .client-avatar span { position: relative; z-index: 1; }
+  .client-info { flex: 1; min-width: 0; }
+  .client-name {
+    font-weight: 700; font-size: 15px; color: var(--text);
+    letter-spacing: 0.5px;
+  }
+  .client-meta {
+    font-size: 11px; color: var(--text2); margin-top: 3px;
+  }
+  .client-right { text-align: right; flex-shrink: 0; margin-right: 4px; }
+  .price-today {
+    font-family: var(--mono); font-size: 16px; font-weight: 700;
+    color: var(--steel); letter-spacing: -0.5px;
+  }
+  .status-badge {
+    font-size: 10px; padding: 2px 7px; border-radius: 2px;
+    margin-top: 3px; display: inline-block; font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  .status-badge.equal {
+    background: rgba(22,163,74,0.1); color: var(--green);
+    border: 1px solid rgba(22,163,74,0.25);
+  }
+  .status-badge.not-equal {
+    background: rgba(220,38,38,0.09); color: var(--red);
+    border: 1px solid rgba(220,38,38,0.22);
+  }
+  .status-badge.not-found {
+    background: rgba(217,119,6,0.1); color: var(--rebar);
+    border: 1px solid rgba(217,119,6,0.25);
+  }
+  .expand-arrow {
+    color: var(--text3); font-size: 11px;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .expanded .expand-arrow { transform: rotate(180deg); color: var(--rebar); }
+
+  .client-detail {
+    max-height: 0; overflow: hidden;
+    border-top: 1px solid transparent;
+    background: var(--bg3);
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s, border-color 0.3s;
+    padding: 0 14px;
+  }
+  .expanded .client-detail {
+    max-height: 800px; padding: 14px;
+    border-top-color: var(--border);
+  }
+  .detail-section { margin-bottom: 14px; }
+  .detail-section:last-child { margin-bottom: 0; }
   .detail-label {
-    font-size: 10px; color: var(--text3); letter-spacing: 1.5px;
+    font-size: 10px; color: var(--text3); letter-spacing: 2px;
     margin-bottom: 8px; font-family: var(--mono); font-weight: 700;
   }
   .price-tiers { display: flex; gap: 6px; flex-wrap: wrap; }
   .price-tier {
-    background: #fff; border: 1.5px solid var(--border);
-    border-radius: 10px; padding: 7px 12px; text-align: center;
-    box-shadow: 0 1px 4px rgba(60,80,130,0.07);
+    background: #fff; border: 1px solid var(--border);
+    border-radius: 3px; padding: 8px 12px; text-align: center;
+    box-shadow: 0 1px 4px rgba(44,74,107,0.06);
+    transition: transform 0.15s;
   }
-  .price-tier.current { border-color: rgba(26,111,212,0.4); background: rgba(26,111,212,0.04); }
-  .tier-price { font-family: var(--mono); font-size: 13px; font-weight: 700; color: var(--text2); }
-  .tier-price.current { color: var(--blue); }
+  .price-tier:hover { transform: translateY(-2px); }
+  .price-tier.current {
+    border-color: var(--rebar);
+    background: rgba(217,119,6,0.05);
+    box-shadow: 0 2px 8px rgba(217,119,6,0.15);
+  }
+  .tier-price {
+    font-family: var(--mono); font-size: 13px; font-weight: 700;
+    color: var(--text2);
+  }
+  .tier-price.current { color: var(--rebar); }
   .tier-pool { font-size: 10px; color: var(--text2); margin-top: 2px; }
-  .tier-pool.positive { color: var(--teal); font-weight: 600; }
-  .tier-pool.negative { color: var(--red); font-weight: 600; }
+  .tier-pool.positive { color: var(--teal); font-weight: 700; }
+  .tier-pool.negative { color: var(--red); font-weight: 700; }
   .tier-pool.zero { color: var(--text3); }
   .kw-row { display: flex; gap: 8px; flex-wrap: wrap; }
   .kw-badge {
-    background: #fff; border: 1.5px solid var(--border);
-    border-radius: 8px; padding: 5px 12px;
-    font-family: var(--mono); font-size: 13px; color: var(--blue);
-    box-shadow: 0 1px 4px rgba(60,80,130,0.07);
+    background: #fff; border: 1px solid var(--border);
+    border-radius: 3px; padding: 6px 12px;
+    font-family: var(--mono); font-size: 13px; color: var(--steel);
+    box-shadow: 0 1px 4px rgba(44,74,107,0.06);
+    font-weight: 700;
   }
-  .kw-badge span { color: var(--text3); font-size: 10px; margin-right: 4px; }
+  .kw-badge span { color: var(--text3); font-size: 10px; margin-right: 4px; font-weight: 400; }
 
-  /* History table */
+  /* ===== 今日存款页 ===== */
+  .deposit-hero {
+    background: linear-gradient(135deg, var(--steel) 0%, var(--steel2) 100%);
+    border-radius: 4px; padding: 18px 16px 16px; margin-bottom: 14px;
+    color: #fff; position: relative; overflow: hidden;
+    box-shadow: 0 8px 24px rgba(44,74,107,0.25);
+  }
+  .deposit-hero::before {
+    content: ''; position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px);
+    background-size: 40px 18px;
+    pointer-events: none;
+  }
+  .deposit-hero::after {
+    content: ''; position: absolute; right: -20px; bottom: -30px;
+    width: 140px; height: 100px;
+    background-image:
+      radial-gradient(circle at 25% 30%, rgba(255,255,255,0.15) 2px, transparent 3px),
+      radial-gradient(circle at 70% 60%, rgba(255,255,255,0.12) 2.5px, transparent 3.5px),
+      radial-gradient(circle at 50% 85%, rgba(255,255,255,0.1) 2px, transparent 3px);
+    background-size: 30px 30px;
+    opacity: 0.5;
+  }
+  .deposit-hero > * { position: relative; z-index: 1; }
+  .deposit-hero-label {
+    font-family: var(--display); font-size: 11px;
+    letter-spacing: 4px; color: var(--rebar2); margin-bottom: 4px;
+  }
+  .deposit-hero-title {
+    font-size: 16px; font-weight: 700; color: rgba(255,255,255,0.95);
+    margin-bottom: 12px; letter-spacing: 1px;
+  }
+  .deposit-total {
+    font-family: var(--mono); font-size: 32px; font-weight: 700;
+    color: #fff; letter-spacing: -1px; line-height: 1;
+  }
+  .deposit-total-unit { font-size: 14px; color: var(--rebar2); margin-left: 4px; font-weight: 400; }
+  .deposit-sub {
+    font-size: 12px; color: rgba(255,255,255,0.7); margin-top: 8px;
+  }
+  /* 数据条形图 — 砖块叠放比喻 */
+  .deposit-bars {
+    display: flex; align-items: flex-end; gap: 3px; height: 50px; margin-top: 14px;
+  }
+  .deposit-bar {
+    flex: 1; background: linear-gradient(180deg, var(--rebar2), var(--rebar));
+    border-radius: 2px 2px 0 0;
+    min-height: 4px; position: relative;
+    transform-origin: bottom;
+    animation: barRise 0.8s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+  @keyframes barRise {
+    from { transform: scaleY(0); opacity: 0; }
+    to { transform: scaleY(1); opacity: 1; }
+  }
+
+  .deposit-list-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 10px; padding: 0 2px;
+  }
+  .deposit-list-title {
+    font-size: 13px; font-weight: 700; color: var(--text);
+    letter-spacing: 0.5px;
+  }
+  .deposit-list-count {
+    font-family: var(--mono); font-size: 11px; color: var(--text3);
+  }
+
+  .deposit-card {
+    background: #fff; border: 1px solid var(--border);
+    border-radius: 4px; margin-bottom: 8px; padding: 12px 14px;
+    box-shadow: var(--shadow); position: relative;
+    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+    opacity: 0; transform: translateY(10px);
+    animation: cardEnter 0.4s ease forwards;
+  }
+  .deposit-card::before {
+    content: ''; position: absolute; left: 0; top: 12px; bottom: 12px;
+    width: 3px; background: var(--steel-light); border-radius: 0 2px 2px 0;
+    transition: background 0.2s, width 0.2s;
+  }
+  .deposit-card:hover {
+    transform: translateY(-1px); box-shadow: var(--shadow2);
+    border-color: var(--border2);
+  }
+  .deposit-card:hover::before { background: var(--rebar); width: 4px; }
+  .deposit-card-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px;
+  }
+  .deposit-customer {
+    display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0;
+  }
+  .deposit-avatar {
+    width: 36px; height: 36px; border-radius: 4px;
+    background: linear-gradient(135deg, #f0ebe0, #d4cbb5);
+    border: 1px solid #c4b89a;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 10px; color: var(--steel);
+    font-weight: 700; flex-shrink: 0;
+    box-shadow: 0 1px 3px rgba(120,100,70,0.2), inset 0 1px 0 rgba(255,255,255,0.5);
+    position: relative; overflow: hidden;
+  }
+  .deposit-avatar::before {
+    content: ''; position: absolute; inset: 0;
+    background-image:
+      radial-gradient(circle at 30% 40%, rgba(120,100,70,0.35) 0.8px, transparent 1.2px),
+      radial-gradient(circle at 65% 65%, rgba(120,100,70,0.3) 1px, transparent 1.5px);
+    background-size: 100% 100%;
+  }
+  .deposit-avatar span { position: relative; z-index: 1; }
+  .deposit-info { flex: 1; min-width: 0; }
+  .deposit-name { font-weight: 700; font-size: 14px; color: var(--text); }
+  .deposit-account { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  .deposit-amount {
+    font-family: var(--mono); font-size: 15px; font-weight: 700;
+    color: var(--green); text-align: right;
+  }
+  .deposit-meta {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border);
+    font-size: 11px;
+  }
+  .deposit-tag {
+    background: var(--bg3); color: var(--text2);
+    padding: 2px 8px; border-radius: 2px;
+    font-family: var(--mono); font-size: 10px;
+  }
+  .deposit-price {
+    font-family: var(--mono); color: var(--steel); font-weight: 700;
+  }
+  .deposit-price-label { color: var(--text3); font-weight: 400; margin-right: 4px; }
+
+  /* 价格历史表 */
   .hist-table-wrap {
-    overflow-x: auto; border-radius: 12px;
-    border: 1.5px solid var(--border); box-shadow: var(--shadow);
+    overflow-x: auto; border-radius: 4px;
+    border: 1px solid var(--border); box-shadow: var(--shadow);
+    background: #fff;
   }
-  .hist-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 500px; background: #fff; }
+  .hist-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 500px; }
   .hist-table th {
-    background: var(--bg3); color: var(--text2); padding: 10px 12px;
-    text-align: center; font-weight: 600; font-size: 11px;
-    border-bottom: 1.5px solid var(--border); white-space: nowrap;
+    background: var(--steel); color: #fff; padding: 10px 12px;
+    text-align: center; font-weight: 700; font-size: 11px;
+    white-space: nowrap; letter-spacing: 0.5px;
+    position: sticky; top: 0;
   }
-  .hist-table th:first-child { text-align: left; }
-  .hist-table tr:hover td { background: #f7f9fd; }
+  .hist-table th:first-child { text-align: left; background: var(--steel2); }
+  .hist-table tr:hover td { background: rgba(217,119,6,0.04); }
   .hist-table td {
-    padding: 8px 12px; text-align: center;
-    border-bottom: 1px solid rgba(200,210,232,0.5);
+    padding: 9px 12px; text-align: center;
+    border-bottom: 1px solid rgba(214,218,226,0.6);
     font-family: var(--mono); color: var(--text2);
+    transition: background 0.15s;
   }
-  .hist-table td:first-child { text-align: left; font-family: var(--sans); font-weight: 700; color: var(--text); }
-  .hist-table td.current-price { color: var(--blue); font-weight: 700; }
+  .hist-table td:first-child {
+    text-align: left; font-family: var(--sans);
+    font-weight: 700; color: var(--text);
+  }
+  .hist-table td.current-price { color: var(--rebar); font-weight: 700; }
   .hist-table td.empty { color: var(--text3); }
 
-  /* Bottom nav */
+  /* 底部导航 */
   .bottom-nav {
     position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
     width: 100%; max-width: 480px; background: #fff;
-    border-top: 1.5px solid var(--border); display: flex; padding: 8px 0 14px; z-index: 200;
-    box-shadow: 0 -4px 16px rgba(60,80,130,0.08);
+    border-top: 1px solid var(--border); display: flex;
+    padding: 8px 0 14px; z-index: 200;
+    box-shadow: 0 -4px 16px rgba(44,74,107,0.08);
   }
-  .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; }
-  .nav-icon { font-size: 20px; }
+  .nav-item {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    gap: 3px; cursor: pointer; padding: 4px 0;
+    transition: transform 0.15s;
+    position: relative;
+  }
+  .nav-item:active { transform: scale(0.92); }
+  .nav-icon { font-size: 20px; transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
   .nav-label { font-size: 10px; color: var(--text3); font-weight: 500; transition: color 0.2s; }
-  .nav-item.active .nav-label { color: var(--blue); font-weight: 700; }
+  .nav-item.active .nav-label { color: var(--steel); font-weight: 700; }
+  .nav-item.active .nav-icon { transform: translateY(-2px) scale(1.1); }
+  .nav-item.active::before {
+    content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 28px; height: 3px; background: var(--rebar); border-radius: 0 0 2px 2px;
+  }
 
-  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  /* 滚动驱动动画 - 元素进入视窗 */
+  .scroll-reveal {
+    opacity: 0; transform: translateY(20px);
+    transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .scroll-reveal.in-view { opacity: 1; transform: translateY(0); }
+
+  /* 数字计数动画占位 */
+  .count-up { display: inline-block; }
+
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
   ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
   ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--steel-light); }
 </style>
 </head>
 <body>
 
-<!-- ===== LOGIN SCREEN ===== -->
+<!-- ===== 登录页 ===== -->
 <div id="loginScreen">
+  <div class="floating-brick fb1"></div>
+  <div class="floating-brick fb2"></div>
+  <div class="floating-brick fb3"></div>
+  <div class="floating-brick fb4"></div>
+
   <div class="login-box">
     <div class="login-logo">
-      <div class="login-logo-icon">💰</div>
-      <h1>价格资金池</h1>
-      <p>请输入账号和密码以继续</p>
+      <div class="login-logo-icon">
+        <!-- 加气砖 SVG 图标 -->
+        <svg viewBox="0 0 40 40" fill="none">
+          <rect x="3" y="10" width="34" height="20" rx="1.5" fill="#3a5d82" stroke="#2c4a6b" stroke-width="1"/>
+          <circle cx="10" cy="16" r="1.2" fill="#f0ebe0" opacity="0.7"/>
+          <circle cx="17" cy="20" r="1.5" fill="#f0ebe0" opacity="0.7"/>
+          <circle cx="25" cy="15" r="1" fill="#f0ebe0" opacity="0.7"/>
+          <circle cx="30" cy="22" r="1.3" fill="#f0ebe0" opacity="0.7"/>
+          <circle cx="13" cy="24" r="1" fill="#f0ebe0" opacity="0.7"/>
+          <circle cx="22" cy="25" r="1.1" fill="#f0ebe0" opacity="0.7"/>
+          <line x1="3" y1="20" x2="37" y2="20" stroke="#1a3552" stroke-width="0.5" opacity="0.4"/>
+        </svg>
+      </div>
+      <h1>加气砖资金池</h1>
+      <div class="brand-en">AAC · PRICE POOL</div>
+      <p>专业 · 高效 · 可信赖</p>
     </div>
     <div class="login-field">
-      <label>账号</label>
+      <label>账号 / USER</label>
       <input type="text" id="loginUser" placeholder="请输入账号" autocomplete="username" />
     </div>
     <div class="login-field">
-      <label>密码</label>
+      <label>密码 / PASSWORD</label>
       <input type="password" id="loginPass" placeholder="请输入密码" autocomplete="current-password" />
     </div>
     <button class="login-btn" onclick="doLogin()">登 录</button>
@@ -316,43 +823,70 @@
   </div>
 </div>
 
-<!-- ===== MAIN APP ===== -->
+<!-- ===== 主应用 ===== -->
 <div id="appScreen">
   <div class="header">
     <div class="header-top">
-      <div class="header-title">PRICE · POOL</div>
+      <div class="header-brand">
+        <div class="brand-logo"></div>
+        <div class="header-title">AAC · POOL</div>
+      </div>
       <div class="header-actions">
         <div class="header-badge" id="dataBadge">加载中…</div>
         <button class="logout-btn" onclick="doLogout()">退出</button>
       </div>
     </div>
-    <div class="header-sub">价格资金池管理</div>
+    <div class="header-sub">加气砖资金池管理</div>
+    <div class="header-sub-en">AERATED CONCRETE · DAILY MANAGEMENT</div>
     <div class="header-time" id="updateTime"></div>
   </div>
 
   <div class="tabs">
     <div class="tab active" onclick="switchTab(0)"><span class="tab-icon">💰</span>今日价格</div>
-    <div class="tab" onclick="switchTab(1)"><span class="tab-icon">📈</span>价格历史</div>
+    <div class="tab" onclick="switchTab(1)"><span class="tab-icon">🏦</span>今日存款</div>
+    <div class="tab" onclick="switchTab(2)"><span class="tab-icon">📈</span>价格历史</div>
   </div>
 
   <div class="panel active" id="panel0">
     <div id="todayContent">
       <div class="loading">
-        <div class="loading-spinner"></div>
-        <div>正在读取 Excel 数据…</div>
+        <div class="brick-loader">
+          <div class="bk"></div><div class="bk"></div><div class="bk"></div>
+          <div class="bk"></div><div class="bk"></div>
+        </div>
+        <div class="loading-text">正在堆砌数据</div>
       </div>
     </div>
   </div>
 
   <div class="panel" id="panel1">
+    <div id="depositContent">
+      <div class="loading">
+        <div class="brick-loader">
+          <div class="bk"></div><div class="bk"></div><div class="bk"></div>
+          <div class="bk"></div><div class="bk"></div>
+        </div>
+        <div class="loading-text">正在堆砌数据</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel2">
     <div id="historyContent">
-      <div class="loading"><div class="loading-spinner"></div></div>
+      <div class="loading">
+        <div class="brick-loader">
+          <div class="bk"></div><div class="bk"></div><div class="bk"></div>
+          <div class="bk"></div><div class="bk"></div>
+        </div>
+        <div class="loading-text">正在堆砌数据</div>
+      </div>
     </div>
   </div>
 
   <div class="bottom-nav">
     <div class="nav-item active" onclick="switchTab(0)"><span class="nav-icon">💰</span><span class="nav-label">今日价格</span></div>
-    <div class="nav-item" onclick="switchTab(1)"><span class="nav-icon">📈</span><span class="nav-label">价格历史</span></div>
+    <div class="nav-item" onclick="switchTab(1)"><span class="nav-icon">🏦</span><span class="nav-label">今日存款</span></div>
+    <div class="nav-item" onclick="switchTab(2)"><span class="nav-icon">📈</span><span class="nav-label">价格历史</span></div>
   </div>
 </div>
 
@@ -366,25 +900,35 @@ function doLogin() {
   const p = document.getElementById('loginPass').value;
   const errEl = document.getElementById('loginError');
   if (u === CORRECT_USER && p === CORRECT_PASS) {
-    document.getElementById('loginScreen').style.display = 'none';
-    const app = document.getElementById('appScreen');
-    app.classList.add('visible');
-    loadExcel();
+    const loginEl = document.getElementById('loginScreen');
+    loginEl.style.transition = 'opacity 0.4s ease';
+    loginEl.style.opacity = '0';
+    setTimeout(() => {
+      loginEl.style.display = 'none';
+      const app = document.getElementById('appScreen');
+      app.classList.add('visible');
+      loadExcel();
+    }, 400);
   } else {
     errEl.style.display = 'block';
+    errEl.style.animation = 'none';
+    void errEl.offsetWidth;
+    errEl.style.animation = 'shake 0.4s';
     document.getElementById('loginPass').value = '';
     setTimeout(() => { errEl.style.display = 'none'; }, 3000);
   }
 }
 
 function doLogout() {
-  document.getElementById('appScreen').classList.remove('visible');
-  document.getElementById('loginScreen').style.display = 'flex';
+  const app = document.getElementById('appScreen');
+  app.classList.remove('visible');
+  const loginEl = document.getElementById('loginScreen');
+  loginEl.style.display = 'flex';
+  loginEl.style.opacity = '1';
   document.getElementById('loginUser').value = '';
   document.getElementById('loginPass').value = '';
 }
 
-// Allow Enter key to submit login
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Enter' && document.getElementById('loginScreen').style.display !== 'none') {
     doLogin();
@@ -397,6 +941,7 @@ const EXCEL_FILE = '11.xlsx';
 let allClients = [];
 let histDates = [];
 let histRows = [];
+let depositData = [];
 
 // ============ 加载 Excel ============
 async function loadExcel() {
@@ -416,6 +961,12 @@ async function loadExcel() {
       parseSheet2(sheet2);
     }
 
+    const sheet4Name = wb.SheetNames.find(n => /sheet4/i.test(n));
+    if (sheet4Name) {
+      const sheet4 = XLSX.utils.sheet_to_json(wb.Sheets[sheet4Name], { header: 1, defval: null });
+      parseSheet4(sheet4);
+    }
+
     const now = new Date();
     const badge = document.getElementById('dataBadge');
     badge.textContent = '✓ 已加载';
@@ -426,7 +977,9 @@ async function loadExcel() {
       String(now.getMinutes()).padStart(2,'0');
 
     renderToday();
+    renderDeposits();
     renderHistory();
+    initScrollReveal();
   } catch (err) {
     showError(err.message);
   }
@@ -481,6 +1034,40 @@ function parseSheet2(rows) {
   }
 }
 
+// 解析 Sheet4 — 今日存款
+function parseSheet4(rows) {
+  if (!rows || rows.length < 2) return;
+  depositData = [];
+  for (let i = 1; i < rows.length; i++) {
+    const r = rows[i];
+    if (!r || !r[2]) continue;  // 客户简称必须存在
+    const dateSerial = toNum(r[0]);
+    const account = r[1] ? String(r[1]).trim() : '';
+    const customer = String(r[2]).trim();
+    const customerId = r[3] !== null && r[3] !== undefined ? String(r[3]).trim() : '';
+    const amount = toNum(r[4]);
+    const price = toNum(r[5]);
+    if (!amount) continue;
+    depositData.push({
+      date: excelDateToStr(dateSerial),
+      account: account,
+      customer: customer,
+      customerId: customerId,
+      amount: amount,
+      price: price
+    });
+  }
+}
+
+// Excel 序列号转日期
+function excelDateToStr(serial) {
+  if (!serial) return '';
+  const utc_days = Math.floor(serial - 25569);
+  const utc_value = utc_days * 86400;
+  const date = new Date(utc_value * 1000);
+  return date.getFullYear() + '-' + String(date.getMonth()+1).padStart(2,'0') + '-' + String(date.getDate()).padStart(2,'0');
+}
+
 function toNum(v) {
   if (v === null || v === undefined || v === '') return null;
   if (typeof v === 'number') return v;
@@ -498,15 +1085,15 @@ function renderToday() {
   document.getElementById('todayContent').innerHTML = `
     <div class="summary">
       <div class="sum-card">
-        <div class="sum-num">${allClients.length}</div>
+        <div class="sum-num count-up" data-target="${allClients.length}">0</div>
         <div class="sum-label">客户总数</div>
       </div>
-      <div class="sum-card">
-        <div class="sum-num green">${equal}</div>
+      <div class="sum-card green">
+        <div class="sum-num green count-up" data-target="${equal}">0</div>
         <div class="sum-label">账目相等</div>
       </div>
-      <div class="sum-card">
-        <div class="sum-num red">${diff}</div>
+      <div class="sum-card red">
+        <div class="sum-num red count-up" data-target="${diff}">0</div>
         <div class="sum-label">待核查</div>
       </div>
     </div>
@@ -517,6 +1104,7 @@ function renderToday() {
     <div id="clientList"></div>
   `;
   renderClientList(allClients);
+  animateCountUp();
 }
 
 function renderClientList(arr) {
@@ -547,9 +1135,10 @@ function renderClientList(arr) {
         </div>
       </div>` : '';
 
-    return `<div class="client-card" id="card-${i}">
+    const delay = Math.min(i * 0.03, 0.6);
+    return `<div class="client-card" id="card-${i}" style="animation-delay: ${delay}s">
       <div class="client-header" onclick="toggleCard(${i})">
-        <div class="client-avatar">${c.name.substring(0,3)}</div>
+        <div class="client-avatar"><span>${c.name.substring(0,3)}</span></div>
         <div class="client-info">
           <div class="client-name">${c.name}</div>
           <div class="client-meta">${summary}</div>
@@ -571,40 +1160,93 @@ function renderClientList(arr) {
   }).join('');
 }
 
-function fmtPool(v) {
-  if (v === 0 || v === null || v === undefined) return '—';
-  const abs = Math.abs(v);
-  const sign = v < 0 ? '-' : '+';
-  return sign + fmtIDR(abs);
-}
-
-// 印尼盾格式：百万以上用"条"，千以上用"k"
-function fmtIDR(abs) {
-  if (abs >= 1e6) {
-    const tiao = abs / 1e6;
-    // 去掉末尾多余零，最多2位小数
-    const s = parseFloat(tiao.toFixed(2));
-    return s + '条';
+// ============ 渲染：今日存款 ============
+function renderDeposits() {
+  if (!depositData.length) {
+    document.getElementById('depositContent').innerHTML = `
+      <div class="loading">
+        <div style="font-size:36px;margin-bottom:10px;">📭</div>
+        <div>暂无存款数据</div>
+      </div>`;
+    return;
   }
-  if (abs >= 1000) {
-    const k = abs / 1000;
-    const s = parseFloat(k.toFixed(1));
-    return s + 'k';
-  }
-  return abs.toLocaleString();
-}
 
-// 价格专用格式（不带正负号）
-function fmtPrice(v) {
-  if (!v) return '—';
-  return fmtIDR(Math.abs(v));
-}
+  const totalAmount = depositData.reduce((s, d) => s + (d.amount || 0), 0);
+  const customerCount = new Set(depositData.map(d => d.customer)).size;
+  const recordCount = depositData.length;
+  const todayDate = depositData[0].date || '今日';
 
-function toggleCard(i) { document.getElementById('card-' + i).classList.toggle('expanded'); }
+  // 按客户分组合计 — 作为条形图
+  const byCustomer = {};
+  depositData.forEach(d => {
+    byCustomer[d.customer] = (byCustomer[d.customer] || 0) + d.amount;
+  });
+  const sortedCust = Object.entries(byCustomer).sort((a,b) => b[1] - a[1]);
+  const maxAmt = sortedCust[0] ? sortedCust[0][1] : 1;
+  const barsHtml = sortedCust.slice(0, 18).map((entry, i) => {
+    const h = Math.max(4, (entry[1] / maxAmt) * 48);
+    return `<div class="deposit-bar" style="height:${h}px; animation-delay:${0.3 + i*0.04}s" title="${entry[0]}: ${fmtIDR(entry[1])}"></div>`;
+  }).join('');
 
-function filterClients() {
-  const q = document.getElementById('searchInput').value.toLowerCase();
-  renderClientList(allClients.filter(c => c.name.toLowerCase().includes(q)));
+  // 卡片列表 — 按金额降序
+  const sorted = [...depositData].sort((a, b) => b.amount - a.amount);
+  const cardsHtml = sorted.map((d, i) => {
+    const delay = Math.min(0.4 + i * 0.05, 1.2);
+    const priceStr = d.price ? `<span class="deposit-price"><span class="deposit-price-label">价格</span>${fmtPrice(d.price)}</span>` : '';
+    return `<div class="deposit-card" style="animation-delay:${delay}s">
+      <div class="deposit-card-row">
+        <div class="deposit-customer">
+          <div class="deposit-avatar"><span>${d.customer.substring(0,3)}</span></div>
+          <div class="deposit-info">
+            <div class="deposit-name">${d.customer}</div>
+            <div class="deposit-account">${d.account || '—'}${d.customerId ? ' · #' + d.customerId : ''}</div>
+          </div>
+        </div>
+        <div class="deposit-amount">+${fmtIDR(d.amount)}</div>
+      </div>
+      <div class="deposit-meta">
+        <span class="deposit-tag">📅 ${d.date || '—'}</span>
+        ${priceStr}
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('depositContent').innerHTML = `
+    <div class="deposit-hero">
+      <div class="deposit-hero-label">TODAY · DEPOSITS</div>
+      <div class="deposit-hero-title">今日存款总览</div>
+      <div>
+        <span class="deposit-total" id="depTotal">0</span>
+        <span class="deposit-total-unit">IDR</span>
+      </div>
+      <div class="deposit-sub">${customerCount} 位客户 · ${recordCount} 笔记录 · ${todayDate}</div>
+      <div class="deposit-bars">${barsHtml}</div>
+    </div>
+    <div class="summary">
+      <div class="sum-card">
+        <div class="sum-num count-up" data-target="${customerCount}">0</div>
+        <div class="sum-label">存款客户</div>
+      </div>
+      <div class="sum-card gold">
+        <div class="sum-num gold count-up" data-target="${recordCount}">0</div>
+        <div class="sum-label">存款笔数</div>
+      </div>
+      <div class="sum-card green">
+        <div class="sum-num green" id="avgDeposit">—</div>
+        <div class="sum-label">平均金额</div>
+      </div>
+    </div>
+    <div class="deposit-list-header">
+      <div class="deposit-list-title">📋 存款明细</div>
+      <div class="deposit-list-count">共 ${recordCount} 笔</div>
+    </div>
+    <div>${cardsHtml}</div>
+  `;
+
+  animateCountUp();
+  animateBigNumber('depTotal', totalAmount, 1400);
+  // 平均金额 — 字符显示
+  document.getElementById('avgDeposit').textContent = fmtIDR(totalAmount / recordCount);
 }
 
 // ============ 渲染：价格历史 ============
@@ -628,18 +1270,102 @@ function renderHistory() {
   `;
 }
 
+// ============ 格式化 ============
+function fmtPool(v) {
+  if (v === 0 || v === null || v === undefined) return '—';
+  const abs = Math.abs(v);
+  const sign = v < 0 ? '-' : '+';
+  return sign + fmtIDR(abs);
+}
+
+function fmtIDR(abs) {
+  if (abs >= 1e6) {
+    const tiao = abs / 1e6;
+    const s = parseFloat(tiao.toFixed(2));
+    return s + '条';
+  }
+  if (abs >= 1000) {
+    const k = abs / 1000;
+    const s = parseFloat(k.toFixed(1));
+    return s + 'k';
+  }
+  return abs.toLocaleString();
+}
+
+function fmtPrice(v) {
+  if (!v) return '—';
+  return fmtIDR(Math.abs(v));
+}
+
+// ============ 微交互 & 动画 ============
+function toggleCard(i) {
+  document.getElementById('card-' + i).classList.toggle('expanded');
+}
+
+function filterClients() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  renderClientList(allClients.filter(c => c.name.toLowerCase().includes(q)));
+}
+
+// 数字滚动动画
+function animateCountUp() {
+  const els = document.querySelectorAll('.count-up');
+  els.forEach(el => {
+    const target = parseInt(el.dataset.target || '0', 10);
+    if (isNaN(target) || target === 0) { el.textContent = target; return; }
+    const duration = 1000;
+    const start = performance.now();
+    function tick(now) {
+      const t = Math.min((now - start) / duration, 1);
+      // easeOutCubic
+      const eased = 1 - Math.pow(1 - t, 3);
+      el.textContent = Math.round(target * eased);
+      if (t < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  });
+}
+
+// 大数字格式化动画 (IDR 总额)
+function animateBigNumber(id, target, duration) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const start = performance.now();
+  function tick(now) {
+    const t = Math.min((now - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - t, 3);
+    const v = target * eased;
+    el.textContent = fmtIDR(v);
+    if (t < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+// 滚动驱动动画 — IntersectionObserver
+function initScrollReveal() {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('in-view');
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+  document.querySelectorAll('.scroll-reveal').forEach(el => observer.observe(el));
+}
+
 // ============ 错误显示 ============
 function showError(msg) {
   const badge = document.getElementById('dataBadge');
   badge.textContent = '✗ 加载失败';
   badge.className = 'header-badge error';
-  document.getElementById('todayContent').innerHTML = `
+  const errHtml = `
     <div class="error">
-      <div style="font-size:32px;margin-bottom:10px">⚠️</div>
+      <div style="font-size:36px;margin-bottom:10px">⚠️</div>
       <div>无法读取 Excel 文件</div>
       <div class="error-detail">${msg}</div>
       <div class="error-help">
-        <b style="color:var(--gold)">请确认：</b><br>
+        <b style="color:var(--rebar)">请确认：</b><br>
         1. 文件 <code>11.xlsx</code> 与本网页放在同一目录<br>
         2. 文件名大小写完全一致<br>
         3. 如果是 GitHub Pages，上传后等 1-2 分钟<br>
@@ -647,6 +1373,8 @@ function showError(msg) {
       </div>
     </div>
   `;
+  document.getElementById('todayContent').innerHTML = errHtml;
+  document.getElementById('depositContent').innerHTML = errHtml;
 }
 
 // ============ 标签切换 ============
